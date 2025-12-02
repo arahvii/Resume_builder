@@ -1,0 +1,7 @@
+werkzeug
+reportlab
+flask
+django
+ckeditor
+
+import os
