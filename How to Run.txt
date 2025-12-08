@@ -1,0 +1,28 @@
+# 1. Activate virtual environment
+venv\Scripts\activate
+
+# 2. Install dependencies (if you haven't already)
+pip install Flask reportlab
+
+# 3. Set the application file
+set FLASK_APP=app.py
+
+# 4. Set the environment (optional but recommended)
+set FLASK_ENV=development
+
+# 5. Run the server
+flask run
+
+
+
+
+
+#dependecies
+werkzeug
+reportlab
+flask
+django
+ckeditor
+
+
+import os
