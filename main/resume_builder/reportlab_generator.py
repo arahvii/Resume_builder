@@ -5,10 +5,9 @@ from reportlab.lib.units import inch
 from reportlab.lib.colors import black
 from io import BytesIO
 from typing import Dict, Any
-import json # CRITICAL: Imported for parsing the JSON string from the form
+import json 
 
-# THE PROBLEM LINE WAS HERE AND HAS BEEN REMOVED: 
-# from .reportlab_generator import generate_resume_pdf 
+
 
 def generate_resume_pdf(data: Dict[str, Any], image_data: bytes = None) -> BytesIO:
     # --- 1. Define Custom Styles ---
@@ -234,4 +233,5 @@ def generate_resume_pdf(data: Dict[str, Any], image_data: bytes = None) -> Bytes
     # --- 9. Build Document ---
     doc.build(Story)
     buffer.seek(0)
+
     return buffer
