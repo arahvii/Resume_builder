@@ -94,6 +94,11 @@
                         <label for="location">Personal Address (City, Country)</label>
                         <input type="text" id="location" placeholder="Cagayan de Oro, Philippines" class="base-input-style">
                     </div>
+                    <!-- Updated: Image File Input -->
+                    <div class="input-group md:col-span-2">
+                        <label for="image-file">Profile Picture (PNG or JPEG, max 1MB)</label>
+                        <input type="file" id="image-file" accept="image/jpeg, image/png" class="base-input-style p-2">
+                    </div>
                     <div class="input-group md:col-span-2">
                         <label for="summary">Professional Summary (4-5 lines)</label>
                         <textarea id="summary" rows="4" placeholder="Skilled Backend Software Developer proficient in building and maintaining robust, high-performance systems..." class="base-input-style"></textarea>
@@ -179,27 +184,24 @@
                 </div>
             </div>
 
-            <!-- 4. Skills -->
+            <!-- 4. Skills (Simplified Input) -->
             <div class="card p-6 bg-white rounded-xl shadow-lg">
-                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">4. Skills</h2>
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">4. Skills (Programming Languages)</h2>
+                <p class="text-gray-500 pl-4 mb-6">
+                    Skills will be displayed under the "Programming Languages" category in the PDF.
+                </p>
                 
                 <!-- Skills List -->
-                <div id="skills-list" class="flex flex-wrap gap-2 mb-6 p-4">
+                <div id="skills-list" class="space-y-4 mb-6 p-4">
                     <!-- Dynamic skill tags will go here -->
                 </div>
 
-                <!-- Add New Skill Form -->
+                <!-- Add New Skill Form (Category removed) -->
                 <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
                     <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Skill</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="input-group">
-                            <label for="skill-category">Skill Category (e.g., 'Languages', 'Databases')</label>
-                            <input type="text" id="skill-category" placeholder="Programming Languages" class="base-input-style">
-                        </div>
-                        <div class="input-group">
-                            <label for="skill-name">Skill Name (e.g., 'Python', 'JavaScript', 'SQL')</label>
-                            <input type="text" id="skill-name" placeholder="Python, JavaScript, Flask" class="base-input-style">
-                        </div>
+                    <div class="input-group">
+                        <label for="skill-name" class="block text-sm font-medium text-gray-700 mb-1">Skill Name (e.g., 'Python', 'JavaScript', 'SQL'. Separate with commas for multiple.)</label>
+                        <input type="text" id="skill-name" placeholder="Python, JavaScript, Flask" class="base-input-style">
                     </div>
                     <button type="button" id="add-skill-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
@@ -208,7 +210,7 @@
                 </div>
             </div>
 
-            <!-- 5. Key Achievements (New Section) -->
+            <!-- 5. Key Achievements -->
             <div class="card p-6 bg-white rounded-xl shadow-lg">
                 <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">5. Key Achievements</h2>
                 <p class="text-gray-500 pl-4 mb-6">
@@ -298,7 +300,7 @@
                 </div>
             </div>
 
-            <!-- 8. Languages -->
+            <!-- 8. Languages (Simplified Input) -->
             <div class="card p-6 bg-white rounded-xl shadow-lg">
                 <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">8. Languages</h2>
                 
@@ -310,15 +312,9 @@
                 <!-- Add New Language Form -->
                 <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
                     <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Language</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="input-group">
-                            <label for="lang-name">Language Name</label>
-                            <input type="text" id="lang-name" placeholder="e.g., Japanese, Spanish" class="base-input-style">
-                        </div>
-                        <div class="input-group">
-                            <label for="lang-proficiency">Proficiency (1-5)</label>
-                            <input type="number" id="lang-proficiency" min="1" max="5" placeholder="5 (Native), 3 (Intermediate)" class="base-input-style">
-                        </div>
+                    <div class="input-group">
+                        <label for="lang-entry">Language and Proficiency (e.g., English - Native, Spanish - Intermediate)</label>
+                        <input type="text" id="lang-entry" placeholder="English - Native" class="base-input-style">
                     </div>
                     <button type="button" id="add-language-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
@@ -351,14 +347,16 @@
 
         // --- State Management ---
         const state = {
-            personal: {},
+            personal: {
+                imageData: '' // Holds Base64 string of the uploaded image
+            },
             experience: [],
             education: [],
-            skills: [],
+            skills: [], // Stores only names now
             achievements: [], 
             courses: [],
             interests: [],
-            languages: []
+            languages: [] // Stores objects with 'entry' text (e.g., "English - Fluent")
         };
 
         // --- DOM Elements ---
@@ -379,14 +377,15 @@
         const inputs = {
             // Personal
             fullName: document.getElementById('full-name'),
-            roleApplied: document.getElementById('role-applied'), // New Input
+            roleApplied: document.getElementById('role-applied'),
             email: document.getElementById('email'),
             phone: document.getElementById('phone'),
             linkedin: document.getElementById('linkedin'),
             github: document.getElementById('github'),
-            website: document.getElementById('website'), // New Input
+            website: document.getElementById('website'),
             location: document.getElementById('location'),
             summary: document.getElementById('summary'),
+            imageFile: document.getElementById('image-file'), // UPDATED: File input reference
             
             // Experience
             expTitle: document.getElementById('exp-title'),
@@ -401,8 +400,7 @@
             eduStartDate: document.getElementById('edu-start-date'),
             eduEndDate: document.getElementById('edu-end-date'),
 
-            // Skills
-            skillCategory: document.getElementById('skill-category'),
+            // Skills (Simplified)
             skillName: document.getElementById('skill-name'),
 
             // Achievements
@@ -416,9 +414,8 @@
             // Interests
             interestName: document.getElementById('interest-name'),
 
-            // Languages
-            langName: document.getElementById('lang-name'),
-            langProficiency: document.getElementById('lang-proficiency'),
+            // Languages (Simplified)
+            langEntry: document.getElementById('lang-entry'),
         };
 
         // --- Utility Functions ---
@@ -524,34 +521,14 @@
             skillsList.innerHTML = state.skills.length === 0 ? 
                 '<p class="text-gray-400 italic p-4 w-full">No skills added yet.</p>' : '';
 
-            const skillsByCategory = state.skills.reduce((acc, skill) => {
-                const category = skill.category || 'Uncategorized';
-                if (!acc[category]) {
-                    acc[category] = [];
-                }
-                acc[category].push(skill);
-                return acc;
-            }, {});
-
-            // Sort categories for consistent display
-            const sortedCategories = Object.keys(skillsByCategory).sort();
-
-            skillsList.innerHTML = ''; // Clear the list before rendering
-
-            sortedCategories.forEach(category => {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'w-full mb-3';
-                categoryDiv.innerHTML = `<p class="font-semibold text-gray-700 mb-1">${category}:</p>`;
-                
-                skillsByCategory[category].forEach(skill => {
-                    const skillSpan = document.createElement('span');
-                    skillSpan.className = 'inline-flex items-center px-3 py-1 mr-2 text-sm font-medium bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-red-100 hover:text-red-800 transition duration-150';
-                    skillSpan.textContent = skill.name;
-                    // Note: removeItem is global now
-                    skillSpan.onclick = () => window.removeItem('skills', skill.id); 
-                    categoryDiv.appendChild(skillSpan);
-                });
-                skillsList.appendChild(categoryDiv);
+            // Since skill category input is removed, we treat all skills as one list for display
+            state.skills.forEach(skill => {
+                const skillSpan = document.createElement('span');
+                skillSpan.className = 'inline-flex items-center px-3 py-1 mr-2 text-sm font-medium bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-red-100 hover:text-red-800 transition duration-150';
+                skillSpan.textContent = skill.name;
+                // Note: removeItem is global now
+                skillSpan.onclick = () => window.removeItem('skills', skill.id); 
+                skillsList.appendChild(skillSpan);
             });
         };
 
@@ -628,19 +605,9 @@
                 const div = document.createElement('div');
                 div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
                 
-                // Create proficiency dots
-                let dots = '';
-                for (let i = 1; i <= 5; i++) {
-                    const color = i <= lang.proficiency ? 'bg-blue-600' : 'bg-gray-300';
-                    dots += `<span class="h-3 w-3 rounded-full ${color} mr-1"></span>`;
-                }
-
                 div.innerHTML = `
                     <div class="flex items-center justify-between w-full">
-                        <p class="font-semibold text-gray-800">${lang.name}</p>
-                        <div class="flex items-center">
-                            ${dots}
-                        </div>
+                        <p class="font-semibold text-gray-800">${lang.entry}</p>
                     </div>
                     <button type="button" onclick="removeItem('languages', '${lang.id}')" 
                         class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
@@ -685,20 +652,21 @@
                     const loadedData = JSON.parse(storedData);
                     
                     // Assign loaded data to state and input fields
-                    // Use spread to preserve references if structure changes
                     Object.assign(state, loadedData);
                     
                     // Load Personal Information into inputs
                     inputs.fullName.value = state.personal.fullName || '';
-                    inputs.roleApplied.value = state.personal.roleApplied || ''; // New
+                    inputs.roleApplied.value = state.personal.roleApplied || '';
                     inputs.email.value = state.personal.email || '';
                     inputs.phone.value = state.personal.phone || '';
                     inputs.linkedin.value = state.personal.linkedin || '';
                     inputs.github.value = state.personal.github || '';
-                    inputs.website.value = state.personal.website || ''; // New
+                    inputs.website.value = state.personal.website || '';
                     inputs.location.value = state.personal.location || '';
                     inputs.summary.value = state.personal.summary || '';
-
+                    // The image data is stored in state.personal.imageData (Base64)
+                    // We cannot pre-fill a file input for security reasons, so this line is removed.
+                    
                     window.renderAll();
                     console.log("Resume data loaded from local storage.");
                 } else {
@@ -722,7 +690,7 @@
             window.showMessage(`Item removed from ${arrayName}.`, 'info');
         };
 
-        // --- Event Handlers for Adding Items (simplified) ---
+        // --- Event Handlers for Adding Items ---
 
         document.getElementById('add-experience-btn').addEventListener('click', () => {
             const title = inputs.expTitle.value.trim();
@@ -780,29 +748,27 @@
             window.showMessage('Education added!', 'success');
         });
         
+        // Updated: Simplified Skill Addition
         document.getElementById('add-skill-btn').addEventListener('click', () => {
-            const category = inputs.skillCategory.value.trim();
             const name = inputs.skillName.value.trim();
 
-            if (!category || !name) {
-                window.showMessage('Please fill out both Skill Category and Skill Name.', 'error');
+            if (!name) {
+                window.showMessage('Please enter at least one Skill Name.', 'error');
                 return;
             }
 
             const newSkills = name.split(',').map(skillName => ({
                 id: window.generateItemId(),
-                category,
                 name: skillName.trim()
             })).filter(skill => skill.name); 
 
             state.skills.push(...newSkills);
 
-            inputs.skillCategory.value = '';
             inputs.skillName.value = '';
 
             window.renderAll();
             saveDataLocally();
-            window.showMessage(`Added ${newSkills.length} skill(s) to ${category}!`, 'success');
+            window.showMessage(`Added ${newSkills.length} skill(s)!`, 'success');
         });
 
         document.getElementById('add-achievement-btn').addEventListener('click', () => {
@@ -871,44 +837,73 @@
             window.showMessage(`Added ${newInterests.length} interest(s)!`, 'success');
         });
 
+        // Updated: Simplified Language Addition
         document.getElementById('add-language-btn').addEventListener('click', () => {
-            const name = inputs.langName.value.trim();
-            const proficiency = parseInt(inputs.langProficiency.value, 10);
+            const entry = inputs.langEntry.value.trim();
             
-            if (!name || isNaN(proficiency) || proficiency < 1 || proficiency > 5) {
-                window.showMessage('Please enter a Language Name and a Proficiency rating between 1 and 5.', 'error');
+            if (!entry) {
+                window.showMessage('Please enter a Language and Proficiency (e.g., English - Fluent).', 'error');
                 return;
             }
 
             state.languages.push({
                 id: window.generateItemId(),
-                name, proficiency
+                entry
             });
 
-            inputs.langName.value = '';
-            inputs.langProficiency.value = '';
+            inputs.langEntry.value = '';
 
             window.renderAll();
             saveDataLocally();
             window.showMessage('Language added!', 'success');
         });
 
+        // --- Image File Handler ---
+        inputs.imageFile.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                state.personal.imageData = '';
+                return;
+            }
+
+            // Security/Size Check (1MB limit)
+            if (file.size > 1024 * 1024) {
+                window.showMessage('Image file is too large (max 1MB).', 'error');
+                event.target.value = ''; // Clear file input
+                state.personal.imageData = ''; // Clear stored data
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // Store the Base64 data URL
+                state.personal.imageData = e.target.result; 
+                window.showMessage('Image loaded successfully!', 'success');
+            };
+            reader.onerror = () => {
+                window.showMessage('Failed to read image file.', 'error');
+                state.personal.imageData = '';
+            };
+
+            reader.readAsDataURL(file); // Convert file to Base64 data URL
+        });
+
+
         // --- Main Form Submission Handler ---
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
             // 1. Gather Personal Info (Always collect from inputs)
-            state.personal = {
-                fullName: inputs.fullName.value.trim(),
-                roleApplied: inputs.roleApplied.value.trim(), // New
-                email: inputs.email.value.trim(),
-                phone: inputs.phone.value.trim(),
-                linkedin: inputs.linkedin.value.trim(),
-                github: inputs.github.value.trim(),
-                website: inputs.website.value.trim(), // New
-                location: inputs.location.value.trim(),
-                summary: inputs.summary.value.trim(),
-            };
+            state.personal.fullName = inputs.fullName.value.trim();
+            state.personal.roleApplied = inputs.roleApplied.value.trim();
+            state.personal.email = inputs.email.value.trim();
+            state.personal.phone = inputs.phone.value.trim();
+            state.personal.linkedin = inputs.linkedin.value.trim();
+            state.personal.github = inputs.github.value.trim();
+            state.personal.website = inputs.website.value.trim();
+            state.personal.location = inputs.location.value.trim();
+            state.personal.summary = inputs.summary.value.trim();
+            // state.personal.imageData is handled by the change listener
 
             // 2. Save all data (Personal + Lists)
             saveDataLocally();
@@ -916,7 +911,7 @@
 
         // --- PDF Generation Logic (using jsPDF) ---
         
-        const generatePDFContent = () => {
+        const generatePDFContent = async () => {
             const doc = new jsPDF();
             let y = 15; // Starting Y position (in mm from top of A4 page)
             const margin = 10; // Reduced margin for professional look
@@ -928,8 +923,8 @@
             const maxContentY = doc.internal.pageSize.getHeight() - margin;
             
             // Double spacing (2.0x) for 13pt font is approx 7mm line height
-            // Base font size is about 13pt (13/72 * 25.4mm = 4.58mm)
             const LINE_HEIGHT_DOUBLE = 7.0; 
+            const LINE_HEIGHT_SINGLE = 4.5; // Used for titles/dates
             
             // Define Colors (RGB)
             const COLOR_PRIMARY = [10, 56, 112];    // Dark Blue
@@ -950,21 +945,47 @@
             let currentYLeft = 0;
             let currentYRight = 0;
 
-            // --- 1. Header (Name, Role, Contact, Photo Placeholder) ---
+            // --- 1. Header (Name, Role, Contact, Photo) ---
             
             // Header Background Bar (Dark Blue)
             doc.setFillColor(...COLOR_PRIMARY);
-            doc.rect(0, 0, pageWidth, 40, 'F'); // Draw a full-width header bar
+            doc.rect(0, 0, pageWidth, 40, 'F'); 
             
-            // Photo Placeholder (20mm x 20mm)
+            // Photo Logic (Use Base64 data from file input) - UPDATED
             const photoSize = 20;
             const photoX = pageWidth - margin - photoSize;
             const photoY = 10;
-            doc.setFillColor(200, 200, 200); // Light Gray
-            doc.rect(photoX, photoY, photoSize, photoSize, 'F');
-            doc.setFontSize(10);
-            doc.setTextColor(50, 50, 50);
-            doc.text("2x2 Photo\nPlaceholder", photoX + photoSize / 2, photoY + photoSize / 2 - 2, { align: 'center' });
+            
+            // Check for the stored Base64 image data
+            const imageData = state.personal.imageData; // Get Base64 data from state
+            
+            if (imageData) {
+                try {
+                    // Extract MIME type from the Base64 data URL
+                    const mimeTypeMatch = imageData.match(/^data:image\/([a-zA-Z]+);base64,/);
+                    // Use JPEG as fallback if MIME type cannot be reliably determined
+                    const imageFormat = mimeTypeMatch && mimeTypeMatch[1] ? mimeTypeMatch[1].toUpperCase() : 'JPEG'; 
+                    
+                    // Add image to PDF using stored Base64 data
+                    doc.addImage(imageData, imageFormat, photoX, photoY, photoSize, photoSize);
+                } catch (error) {
+                    console.error("Error drawing Base64 image to PDF:", error);
+                    // Fallback to placeholder on error
+                    doc.setFillColor(200, 200, 200); 
+                    doc.rect(photoX, photoY, photoSize, photoSize, 'F');
+                    doc.setFontSize(10);
+                    doc.setTextColor(50, 50, 50);
+                    doc.text("Image\nFailed", photoX + photoSize / 2, photoY + photoSize / 2 - 2, { align: 'center' });
+                }
+            } else {
+                // Default placeholder if no data is provided
+                doc.setFillColor(200, 200, 200); 
+                doc.rect(photoX, photoY, photoSize, photoSize, 'F');
+                doc.setFontSize(10);
+                doc.setTextColor(50, 50, 50);
+                doc.text("2x2 Photo\nPlaceholder", photoX + photoSize / 2, photoY + photoSize / 2 - 2, { align: 'center' });
+            }
+
             
             // Name (Font Size 28, White)
             doc.setFont('helvetica', 'bold');
@@ -1044,7 +1065,7 @@
                     doc.setFontSize(14);
                     doc.setTextColor(...COLOR_SECONDARY);
                     doc.text(exp.title, column1Start, currentYLeft);
-                    currentYLeft += 5; // Increased line space
+                    currentYLeft += LINE_HEIGHT_SINGLE; 
                     
                     // Company & Dates (Size 13, Italic, Gray)
                     doc.setFont('helvetica', 'italic');
@@ -1052,7 +1073,7 @@
                     doc.setTextColor(...COLOR_TEXT);
                     const dateRange = formatDate(exp.startDate) + ' - ' + formatDate(exp.endDate);
                     doc.text(`${exp.company} | ${dateRange}`, column1Start, currentYLeft);
-                    currentYLeft += 7; // Increased line space
+                    currentYLeft += LINE_HEIGHT_DOUBLE * 0.8; 
 
                     // Description (Bullet points, Size 13, Normal, Gray)
                     doc.setFont('helvetica', 'normal');
@@ -1085,14 +1106,21 @@
                     doc.setFontSize(14);
                     doc.setTextColor(...COLOR_SECONDARY);
                     doc.text(edu.degree, column1Start, currentYLeft);
-                    currentYLeft += 5; // Increased line space
+                    currentYLeft += LINE_HEIGHT_SINGLE; 
 
-                    // School & Dates (Size 13, Italic, Gray)
+                    // Dates (Size 13, Italic, Gray) - MOVED HERE
                     doc.setFont('helvetica', 'italic');
                     doc.setFontSize(13);
                     doc.setTextColor(...COLOR_TEXT);
                     const dateRange = formatDate(edu.startDate) + ' - ' + formatDate(edu.endDate);
-                    doc.text(`${edu.school} | ${dateRange}`, column1Start, currentYLeft);
+                    doc.text(`${dateRange}`, column1Start, currentYLeft);
+                    currentYLeft += LINE_HEIGHT_SINGLE;
+                    
+                    // School (Size 13, Normal, Gray)
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(...COLOR_TEXT);
+                    doc.text(edu.school, column1Start, currentYLeft);
+                    
                     currentYLeft += 9; // Increased space after entry
                 });
             }
@@ -1129,10 +1157,7 @@
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(...COLOR_TEXT);
 
-                const languageLines = state.languages.map(lang => {
-                    const stars = '★'.repeat(lang.proficiency) + '☆'.repeat(5 - lang.proficiency);
-                    return `${lang.name}: ${stars}`;
-                }).join(' | ');
+                const languageLines = state.languages.map(lang => lang.entry).join(' | ');
 
                 const lines = doc.splitTextToSize(languageLines, column1Width);
                 doc.text(lines, column1Start, currentYLeft);
@@ -1142,52 +1167,40 @@
 
             // --- Right Column Sections (Secondary) ---
 
-            // 2. Skills
+            // 2. Skills (Simplified: Only "Programming Languages")
             if (state.skills.length > 0) {
                 currentYRight = addSectionTitle(column2Start, currentYRight, 'SKILLS');
                 doc.setFontSize(13);
                 
-                const skillsByCategory = state.skills.reduce((acc, skill) => {
-                    const category = skill.category || 'Other';
-                    if (!acc[category]) acc[category] = [];
-                    acc[category].push(skill.name);
-                    return acc;
-                }, {});
+                currentYRight = checkY(12, currentYRight); 
+                if (currentYRight > maxContentY) {
+                    doc.addPage();
+                    currentYRight = margin;
+                    currentYLeft = margin; 
+                    doc.text('CONTINUED: SKILLS', column1Start, currentYLeft);
+                    currentYLeft += 5;
+                    currentYRight = currentYLeft;
+                }
 
-                const sortedCategories = Object.keys(skillsByCategory).sort();
+                const categoryText = `Programming Languages: `;
+                
+                // Draw Category (Bold, Orange)
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(...COLOR_SECONDARY);
+                doc.text(categoryText, column2Start, currentYRight);
+                
+                // Draw Skills (Normal, Gray)
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(...COLOR_TEXT);
+                const skillsList = state.skills.map(s => s.name).join(', ');
 
-                sortedCategories.forEach(category => {
-                    currentYRight = checkY(12, currentYRight); // Increased check space
-                    if (currentYRight > maxContentY) {
-                        // If right column overflows, jump to new page and continue in the left column
-                        doc.addPage();
-                        currentYRight = margin;
-                        currentYLeft = margin; 
-                        doc.text('CONTINUED: SKILLS', column1Start, currentYLeft); // Label continuation
-                        currentYLeft += 5;
-                        currentYRight = currentYLeft; // Reset right column start for the new page
-                    }
-
-                    const categoryText = `${category}: `;
-                    
-                    // Draw Category (Bold, Orange)
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(...COLOR_SECONDARY);
-                    doc.text(categoryText, column2Start, currentYRight);
-                    
-                    // Draw Skills (Normal, Gray)
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(...COLOR_TEXT);
-                    const skillsList = skillsByCategory[category].join(', ');
-
-                    // Measure category label width for indentation
-                    const labelWidth = doc.getStringUnitWidth(categoryText) * 13 / doc.internal.scaleFactor;
-                    
-                    const skillLines = doc.splitTextToSize(skillsList, column2Width - labelWidth);
-                    doc.text(skillLines, column2Start + labelWidth, currentYRight);
-                    
-                    currentYRight += skillLines.length * LINE_HEIGHT_DOUBLE + 6; // Use 2.0x line height + increased spacing
-                });
+                // Measure category label width for indentation
+                const labelWidth = doc.getStringUnitWidth(categoryText) * 13 / doc.internal.scaleFactor;
+                
+                const skillLines = doc.splitTextToSize(skillsList, column2Width - labelWidth);
+                doc.text(skillLines, column2Start + labelWidth, currentYRight);
+                
+                currentYRight += skillLines.length * LINE_HEIGHT_DOUBLE + 6; 
             }
 
             // 3. Key Achievements
@@ -1253,18 +1266,17 @@
         // --- Event Listeners ---
         generatePdfBtn.addEventListener('click', () => {
              // 1. Gather Personal Info one last time
-            state.personal = {
-                fullName: inputs.fullName.value.trim(),
-                roleApplied: inputs.roleApplied.value.trim(),
-                email: inputs.email.value.trim(),
-                phone: inputs.phone.value.trim(),
-                linkedin: inputs.linkedin.value.trim(),
-                github: inputs.github.value.trim(),
-                website: inputs.website.value.trim(),
-                location: inputs.location.value.trim(),
-                summary: inputs.summary.value.trim(),
-            };
-
+            state.personal.fullName = inputs.fullName.value.trim();
+            state.personal.roleApplied = inputs.roleApplied.value.trim();
+            state.personal.email = inputs.email.value.trim();
+            state.personal.phone = inputs.phone.value.trim();
+            state.personal.linkedin = inputs.linkedin.value.trim();
+            state.personal.github = inputs.github.value.trim();
+            state.personal.website = inputs.website.value.trim();
+            state.personal.location = inputs.location.value.trim();
+            state.personal.summary = inputs.summary.value.trim();
+            // state.personal.imageData is already updated by the change listener
+            
             if (!state.personal.fullName || state.experience.length === 0) {
                  window.showMessage('Please enter your Full Name and at least one Experience entry before generating the PDF.', 'error');
                  return;
