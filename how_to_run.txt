@@ -1,1 +1,0 @@
-(venv) C:\Development\resume_builder\main> python -m resume_builder.app
