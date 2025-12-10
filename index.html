@@ -6,6 +6,8 @@
     <title>Resume Builder</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load jsPDF library for in-browser PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* General Styles */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
@@ -36,10 +38,14 @@
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5) !important;
         }
 
+        /* Custom Styles for Rendered List Descriptions */
         .experience-description ul, .achievement-description ul {
             list-style: disc;
             margin-left: 1.25rem;
             margin-top: 0.5rem;
+            padding-left: 0; /* Ensures clean alignment */
+            font-size: 0.95rem; /* Slightly smaller for compactness */
+            color: #4b5563;
         }
     </style>
 </head>
@@ -47,7 +53,7 @@
 
     <div class="max-w-6xl mx-auto">
         <h1 class="text-4xl font-extrabold text-gray-900 mb-6 text-center">Resume Builder</h1>
-        <p class="text-center text-lg text-gray-600 mb-10">Enter your professional data below to generate your resume.</p>
+        <p class="text-center text-lg text-gray-600 mb-10">Enter your professional data below to generate your PDF resume instantly.</p>
 
         <!-- Main Form Wrapper -->
         <form id="resume-form" class="space-y-10">
@@ -59,6 +65,10 @@
                     <div class="input-group">
                         <label for="full-name">Full Name</label>
                         <input type="text" id="full-name" placeholder="Bridget Sarah Nazi" class="base-input-style">
+                    </div>
+                    <div class="input-group">
+                        <label for="role-applied">Role Applying For</label>
+                        <input type="text" id="role-applied" placeholder="Senior Backend Developer" class="base-input-style">
                     </div>
                     <div class="input-group">
                         <label for="email">Email Address</label>
@@ -77,7 +87,11 @@
                         <input type="url" id="github" placeholder="https://github.com/arahvii/Resume_builder" class="base-input-style">
                     </div>
                     <div class="input-group">
-                        <label for="location">Location</label>
+                        <label for="website">Portfolio/Website URL</label>
+                        <input type="url" id="website" placeholder="https://portfolio.com/" class="base-input-style">
+                    </div>
+                    <div class="input-group">
+                        <label for="location">Personal Address (City, Country)</label>
                         <input type="text" id="location" placeholder="Cagayan de Oro, Philippines" class="base-input-style">
                     </div>
                     <div class="input-group md:col-span-2">
@@ -218,7 +232,7 @@
 
                     <div class="mb-4">
                         <label for="achievement-description" class="block text-sm font-medium text-gray-700 mb-1">
-                            Achievement Description
+                            Achievement Description (One bullet point per line)
                         </label>
                         <textarea id="achievement-description" rows="3"
                             placeholder="Detailed description of the achievement and contribution (e.g., Reduced database latency by 40\%)."
@@ -313,11 +327,15 @@
                 </div>
             </div>
 
-            <!-- Save Button (Main Form Submission) -->
-            <div class="text-center pt-8 pb-12">
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 pt-8 pb-12">
                 <button type="submit" id="save-data-btn"
                     class="px-12 py-4 bg-green-600 text-white text-xl font-bold rounded-full hover:bg-green-700 transition duration-300 shadow-xl shadow-green-300/50">
                     Save Resume Data
+                </button>
+                <button type="button" id="generate-pdf-btn"
+                    class="px-12 py-4 bg-purple-600 text-white text-xl font-bold rounded-full hover:bg-purple-700 transition duration-300 shadow-xl shadow-purple-300/50">
+                    Generate & Download PDF
                 </button>
             </div>
             
@@ -328,7 +346,8 @@
     <div id="status-message" class="fixed bottom-4 right-4 p-4 rounded-lg text-white shadow-lg z-50 hidden transition-opacity duration-300"></div>
 
     <script type="module">
-        // NO FIREBASE CODE - Using Local Storage for Immediate Persistence
+        // Import jsPDF from the window object
+        const { jsPDF } = window.jspdf;
 
         // --- State Management ---
         const state = {
@@ -345,6 +364,7 @@
         // --- DOM Elements ---
         const form = document.getElementById('resume-form');
         const statusMessage = document.getElementById('status-message');
+        const generatePdfBtn = document.getElementById('generate-pdf-btn');
 
         // Lists
         const experienceList = document.getElementById('experience-list');
@@ -359,10 +379,12 @@
         const inputs = {
             // Personal
             fullName: document.getElementById('full-name'),
+            roleApplied: document.getElementById('role-applied'), // New Input
             email: document.getElementById('email'),
             phone: document.getElementById('phone'),
             linkedin: document.getElementById('linkedin'),
             github: document.getElementById('github'),
+            website: document.getElementById('website'), // New Input
             location: document.getElementById('location'),
             summary: document.getElementById('summary'),
             
@@ -427,27 +449,44 @@
 
         // Expose globally for inline onclick
         window.generateItemId = () => crypto.randomUUID();
+        
+        // Helper to format date strings for PDF
+        const formatDate = (dateString) => {
+            if (dateString === 'Present') return 'Present';
+            if (!dateString) return '';
+            try {
+                // Input format is YYYY-MM
+                const [year, month] = dateString.split('-');
+                if (year && month) {
+                    const monthName = new Date(year, parseInt(month) - 1).toLocaleString('en-us', { month: 'short' });
+                    return `${monthName} ${year}`;
+                }
+                return dateString; // Return as-is if parsing fails
+            } catch (e) {
+                return dateString;
+            }
+        };
 
-        // --- Renderer Functions ---
+        // --- Renderer Functions (for displaying data in the form) ---
 
         const renderExperience = () => {
             experienceList.innerHTML = state.experience.length === 0 ? 
                 '<p class="text-gray-400 italic p-4">No experience added yet.</p>' : '';
             
-            state.experience.forEach((exp) => {
+            state.experience.sort((a, b) => (b.endDate === 'Present' ? 1 : b.endDate.localeCompare(a.endDate))).forEach((exp) => {
                 const div = document.createElement('div');
                 div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
                 
                 const descriptionHtml = exp.description.split('\n').map(line => line.trim() ? `<li>${line.trim()}</li>` : '').join('');
 
                 div.innerHTML = `
-                    <div>
+                    <div class="w-full">
                         <p class="font-semibold text-lg text-gray-800">${exp.title} at ${exp.company}</p>
-                        <p class="text-sm text-gray-600">${exp.startDate} - ${exp.endDate}</p>
+                        <p class="text-sm text-gray-600 mb-2">${formatDate(exp.startDate)} - ${formatDate(exp.endDate)}</p>
                         <div class="experience-description"><ul>${descriptionHtml}</ul></div>
                     </div>
                     <button type="button" onclick="removeItem('experience', '${exp.id}')" 
-                        class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
+                        class="flex-shrink-0 text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                           <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                         </svg>
@@ -461,14 +500,14 @@
             educationList.innerHTML = state.education.length === 0 ? 
                 '<p class="text-gray-400 italic p-4">No education added yet.</p>' : '';
             
-            state.education.forEach((edu) => {
+            state.education.sort((a, b) => (b.endDate === 'Present' ? 1 : b.endDate.localeCompare(a.endDate))).forEach((edu) => {
                 const div = document.createElement('div');
                 div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
                 
                 div.innerHTML = `
                     <div>
                         <p class="font-semibold text-lg text-gray-800">${edu.degree} at ${edu.school}</p>
-                        <p class="text-sm text-gray-600">${edu.startDate} - ${edu.endDate}</p>
+                        <p class="text-sm text-gray-600">${formatDate(edu.startDate)} - ${formatDate(edu.endDate)}</p>
                     </div>
                     <button type="button" onclick="removeItem('education', '${edu.id}')" 
                         class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
@@ -527,12 +566,12 @@
                 const descriptionHtml = ach.description.split('\n').map(line => line.trim() ? `<li>${line.trim()}</li>` : '').join('');
 
                 div.innerHTML = `
-                    <div>
-                        <p class="font-semibold text-gray-800">${ach.name}</p>
+                    <div class="w-full">
+                        <p class="font-semibold text-gray-800 mb-2">${ach.name}</p>
                         <div class="achievement-description"><ul>${descriptionHtml}</ul></div>
                     </div>
                     <button type="button" onclick="removeItem('achievements', '${ach.id}')" 
-                        class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
+                        class="flex-shrink-0 text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                           <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                         </svg>
@@ -646,14 +685,17 @@
                     const loadedData = JSON.parse(storedData);
                     
                     // Assign loaded data to state and input fields
+                    // Use spread to preserve references if structure changes
                     Object.assign(state, loadedData);
                     
                     // Load Personal Information into inputs
                     inputs.fullName.value = state.personal.fullName || '';
+                    inputs.roleApplied.value = state.personal.roleApplied || ''; // New
                     inputs.email.value = state.personal.email || '';
                     inputs.phone.value = state.personal.phone || '';
                     inputs.linkedin.value = state.personal.linkedin || '';
                     inputs.github.value = state.personal.github || '';
+                    inputs.website.value = state.personal.website || ''; // New
                     inputs.location.value = state.personal.location || '';
                     inputs.summary.value = state.personal.summary || '';
 
@@ -670,7 +712,7 @@
             }
         };
 
-        // --- CRUD Functions ---
+        // --- CRUD Functions (unchanged) ---
 
         // Expose globally for inline onclick
         window.removeItem = (arrayName, itemId) => {
@@ -680,9 +722,8 @@
             window.showMessage(`Item removed from ${arrayName}.`, 'info');
         };
 
-        // --- Event Handlers for Adding Items ---
+        // --- Event Handlers for Adding Items (simplified) ---
 
-        // Experience
         document.getElementById('add-experience-btn').addEventListener('click', () => {
             const title = inputs.expTitle.value.trim();
             const company = inputs.expCompany.value.trim();
@@ -712,7 +753,6 @@
             window.showMessage('Experience added!', 'success');
         });
 
-        // Education
         document.getElementById('add-education-btn').addEventListener('click', () => {
             const degree = inputs.eduDegree.value.trim();
             const school = inputs.eduSchool.value.trim();
@@ -740,7 +780,6 @@
             window.showMessage('Education added!', 'success');
         });
         
-        // Skills
         document.getElementById('add-skill-btn').addEventListener('click', () => {
             const category = inputs.skillCategory.value.trim();
             const name = inputs.skillName.value.trim();
@@ -750,16 +789,14 @@
                 return;
             }
 
-            // Split skill names by comma, clean them up, and add individually
             const newSkills = name.split(',').map(skillName => ({
                 id: window.generateItemId(),
                 category,
                 name: skillName.trim()
-            })).filter(skill => skill.name); // Filter out empty strings from bad splits
+            })).filter(skill => skill.name); 
 
             state.skills.push(...newSkills);
 
-            // Clear inputs
             inputs.skillCategory.value = '';
             inputs.skillName.value = '';
 
@@ -768,7 +805,6 @@
             window.showMessage(`Added ${newSkills.length} skill(s) to ${category}!`, 'success');
         });
 
-        // Achievements
         document.getElementById('add-achievement-btn').addEventListener('click', () => {
             const name = inputs.achievementName.value.trim();
             const description = inputs.achievementDescription.value.trim();
@@ -783,7 +819,6 @@
                 name, description
             });
 
-            // Clear inputs
             inputs.achievementName.value = '';
             inputs.achievementDescription.value = '';
 
@@ -792,7 +827,6 @@
             window.showMessage('Key Achievement added!', 'success');
         });
 
-        // Courses
         document.getElementById('add-course-btn').addEventListener('click', () => {
             const name = inputs.courseName.value.trim();
             const institution = inputs.courseInstitution.value.trim();
@@ -807,7 +841,6 @@
                 name, institution
             });
 
-            // Clear inputs
             inputs.courseName.value = '';
             inputs.courseInstitution.value = '';
 
@@ -816,7 +849,6 @@
             window.showMessage('Course/Training added!', 'success');
         });
         
-        // Interests
         document.getElementById('add-interest-btn').addEventListener('click', () => {
             const name = inputs.interestName.value.trim();
             
@@ -825,7 +857,6 @@
                 return;
             }
 
-            // Split interest names by comma, clean them up, and add individually
             const newInterests = name.split(',').map(interestName => ({
                 id: window.generateItemId(),
                 name: interestName.trim()
@@ -833,7 +864,6 @@
 
             state.interests.push(...newInterests);
 
-            // Clear inputs
             inputs.interestName.value = '';
 
             window.renderAll();
@@ -841,7 +871,6 @@
             window.showMessage(`Added ${newInterests.length} interest(s)!`, 'success');
         });
 
-        // Languages
         document.getElementById('add-language-btn').addEventListener('click', () => {
             const name = inputs.langName.value.trim();
             const proficiency = parseInt(inputs.langProficiency.value, 10);
@@ -856,7 +885,6 @@
                 name, proficiency
             });
 
-            // Clear inputs
             inputs.langName.value = '';
             inputs.langProficiency.value = '';
 
@@ -872,10 +900,12 @@
             // 1. Gather Personal Info (Always collect from inputs)
             state.personal = {
                 fullName: inputs.fullName.value.trim(),
+                roleApplied: inputs.roleApplied.value.trim(), // New
                 email: inputs.email.value.trim(),
                 phone: inputs.phone.value.trim(),
                 linkedin: inputs.linkedin.value.trim(),
                 github: inputs.github.value.trim(),
+                website: inputs.website.value.trim(), // New
                 location: inputs.location.value.trim(),
                 summary: inputs.summary.value.trim(),
             };
@@ -884,26 +914,367 @@
             saveDataLocally();
         });
 
-        // --- Initial Load ---
-        loadDataLocally();
+        // --- PDF Generation Logic (using jsPDF) ---
+        
+        const generatePDFContent = () => {
+            const doc = new jsPDF();
+            let y = 15; // Starting Y position (in mm from top of A4 page)
+            const margin = 10; // Reduced margin for professional look
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const column1Start = margin;
+            const column2Start = pageWidth / 2 + 5; // Start of right column
+            const column1Width = pageWidth / 2 - 15; // Width of left column
+            const column2Width = pageWidth / 2 - 15; // Width of right column
+            const maxContentY = doc.internal.pageSize.getHeight() - margin;
+            
+            // Double spacing (2.0x) for 13pt font is approx 7mm line height
+            // Base font size is about 13pt (13/72 * 25.4mm = 4.58mm)
+            const LINE_HEIGHT_DOUBLE = 7.0; 
+            
+            // Define Colors (RGB)
+            const COLOR_PRIMARY = [10, 56, 112];    // Dark Blue
+            const COLOR_SECONDARY = [255, 140, 0];  // Orange
+            const COLOR_TEXT = [74, 74, 74];        // Gray
+            const COLOR_HEADER_TEXT = [255, 255, 255]; // White for header background
+            
+            // Helper to add a new page if content overflows
+            const checkY = (requiredSpace, currentColumnY) => {
+                // We add 5mm extra buffer to prevent content from being too close to the footer
+                if (currentColumnY + requiredSpace > maxContentY) {
+                    return maxContentY + 1; // Signal that a new column or page is needed
+                }
+                return currentColumnY;
+            };
 
-        // Add event listeners to personal info fields to trigger save on change
-        Object.values(inputs).slice(0, 7).forEach(input => { // The first 7 inputs are personal info
-            input.addEventListener('change', () => {
-                // Update personal info in state immediately upon change
-                state.personal = {
-                    fullName: inputs.fullName.value.trim(),
-                    email: inputs.email.value.trim(),
-                    phone: inputs.phone.value.trim(),
-                    linkedin: inputs.linkedin.value.trim(),
-                    github: inputs.github.value.trim(),
-                    location: inputs.location.value.trim(),
-                    summary: inputs.summary.value.trim(),
-                };
-                saveDataLocally();
-            });
+            const p = state.personal;
+            let currentYLeft = 0;
+            let currentYRight = 0;
+
+            // --- 1. Header (Name, Role, Contact, Photo Placeholder) ---
+            
+            // Header Background Bar (Dark Blue)
+            doc.setFillColor(...COLOR_PRIMARY);
+            doc.rect(0, 0, pageWidth, 40, 'F'); // Draw a full-width header bar
+            
+            // Photo Placeholder (20mm x 20mm)
+            const photoSize = 20;
+            const photoX = pageWidth - margin - photoSize;
+            const photoY = 10;
+            doc.setFillColor(200, 200, 200); // Light Gray
+            doc.rect(photoX, photoY, photoSize, photoSize, 'F');
+            doc.setFontSize(10);
+            doc.setTextColor(50, 50, 50);
+            doc.text("2x2 Photo\nPlaceholder", photoX + photoSize / 2, photoY + photoSize / 2 - 2, { align: 'center' });
+            
+            // Name (Font Size 28, White)
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(28);
+            doc.setTextColor(...COLOR_HEADER_TEXT);
+            doc.text(p.fullName.toUpperCase(), pageWidth / 2, 15, { align: 'center' });
+            
+            // Role (Font Size 14, Orange)
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(14);
+            doc.setTextColor(...COLOR_SECONDARY);
+            doc.text(p.roleApplied || 'Professional Resume', pageWidth / 2, 22, { align: 'center' });
+
+            // Contact Info (Font Size 11, White)
+            doc.setFontSize(11);
+            doc.setTextColor(...COLOR_HEADER_TEXT);
+            const contactItems = [];
+            if (p.phone) contactItems.push(p.phone);
+            if (p.email) contactItems.push(p.email);
+            if (p.location) contactItems.push(p.location);
+            
+            const contactLine = contactItems.join(' | ');
+            doc.text(contactLine, pageWidth / 2, 29, { align: 'center' });
+            
+            // Links (Separate line, smaller text)
+            doc.setFontSize(9);
+            const links = [];
+            if (p.linkedin) links.push(`LinkedIn: ${p.linkedin}`);
+            if (p.github) links.push(`GitHub: ${p.github}`);
+            if (p.website) links.push(`Portfolio: ${p.website}`);
+            doc.text(links.join(' | '), pageWidth / 2, 34, { align: 'center' });
+
+            y = 45; // Start main content below header
+            currentYLeft = y;
+            currentYRight = y;
+
+            // --- Section Helper Function ---
+            const addSectionTitle = (x, y, title) => {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(15); // Size 15
+                doc.setTextColor(...COLOR_PRIMARY); // Dark Blue
+                doc.text(title.toUpperCase(), x, y);
+                y += 2;
+                // Orange Underline
+                doc.setDrawColor(...COLOR_SECONDARY);
+                doc.setLineWidth(0.8);
+                doc.line(x, y, x + 35, y); // Short, thick orange line
+                y += 8; // Increased vertical spacing after title for double spacing
+                return y;
+            };
+
+            // --- Left Column Sections (Primary) ---
+
+            // 2. Professional Summary
+            if (p.summary) {
+                currentYLeft = addSectionTitle(column1Start, currentYLeft, 'SUMMARY');
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(13); // Size 13
+                doc.setTextColor(...COLOR_TEXT); // Gray
+                const summaryLines = doc.splitTextToSize(p.summary, column1Width);
+                doc.text(summaryLines, column1Start, currentYLeft);
+                currentYLeft += summaryLines.length * LINE_HEIGHT_DOUBLE + 8; // Use 2.0x line height + extra spacing
+            }
+
+            // 3. Experience
+            if (state.experience.length > 0) {
+                currentYLeft = checkY(15, currentYLeft);
+                if (currentYLeft > maxContentY) { doc.addPage(); currentYLeft = margin; }
+                currentYLeft = addSectionTitle(column1Start, currentYLeft, 'EXPERIENCE');
+                
+                state.experience.sort((a, b) => (b.endDate === 'Present' ? 1 : b.endDate.localeCompare(a.endDate))).forEach(exp => {
+                    currentYLeft = checkY(30, currentYLeft); // Increased check space for double spacing
+                    if (currentYLeft > maxContentY) { doc.addPage(); currentYLeft = margin; }
+
+                    // Title (Size 14, Bold, Orange)
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.setTextColor(...COLOR_SECONDARY);
+                    doc.text(exp.title, column1Start, currentYLeft);
+                    currentYLeft += 5; // Increased line space
+                    
+                    // Company & Dates (Size 13, Italic, Gray)
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(13);
+                    doc.setTextColor(...COLOR_TEXT);
+                    const dateRange = formatDate(exp.startDate) + ' - ' + formatDate(exp.endDate);
+                    doc.text(`${exp.company} | ${dateRange}`, column1Start, currentYLeft);
+                    currentYLeft += 7; // Increased line space
+
+                    // Description (Bullet points, Size 13, Normal, Gray)
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(13);
+                    const bulletPoints = exp.description.split('\n').filter(line => line.trim());
+                    bulletPoints.forEach(line => {
+                        const bulletText = '• ' + line.trim();
+                        const bulletLines = doc.splitTextToSize(bulletText, column1Width - 4); // Indent 4mm for bullet
+                        
+                        doc.text(bulletLines, column1Start + 4, currentYLeft);
+                        currentYLeft += bulletLines.length * LINE_HEIGHT_DOUBLE; // Use 2.0x line height for bullets
+                    });
+                    currentYLeft += 6; // Increased space after entry
+                });
+            }
+
+            // 4. Education
+            if (state.education.length > 0) {
+                currentYLeft = checkY(15, currentYLeft);
+                if (currentYLeft > maxContentY) { doc.addPage(); currentYLeft = margin; }
+                currentYLeft = addSectionTitle(column1Start, currentYLeft, 'EDUCATION');
+
+                doc.setFontSize(13);
+                state.education.sort((a, b) => (b.endDate === 'Present' ? 1 : b.endDate.localeCompare(a.endDate))).forEach(edu => {
+                    currentYLeft = checkY(15, currentYLeft); // Increased check space
+                    if (currentYLeft > maxContentY) { doc.addPage(); currentYLeft = margin; }
+
+                    // Degree (Size 14, Bold, Orange)
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.setTextColor(...COLOR_SECONDARY);
+                    doc.text(edu.degree, column1Start, currentYLeft);
+                    currentYLeft += 5; // Increased line space
+
+                    // School & Dates (Size 13, Italic, Gray)
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(13);
+                    doc.setTextColor(...COLOR_TEXT);
+                    const dateRange = formatDate(edu.startDate) + ' - ' + formatDate(edu.endDate);
+                    doc.text(`${edu.school} | ${dateRange}`, column1Start, currentYLeft);
+                    currentYLeft += 9; // Increased space after entry
+                });
+            }
+
+            // 5. Courses & Training
+            if (state.courses.length > 0) {
+                currentYLeft = checkY(15, currentYLeft);
+                if (currentYLeft > maxContentY) { doc.addPage(); currentYLeft = margin; }
+                currentYLeft = addSectionTitle(column1Start, currentYLeft, 'TRAINING / COURSES');
+
+                doc.setFontSize(13);
+                state.courses.forEach(course => {
+                    currentYLeft = checkY(12, currentYLeft);
+                    if (currentYLeft > maxContentY) { doc.addPage(); currentYLeft = margin; }
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(...COLOR_TEXT);
+                    doc.text(course.name, column1Start, currentYLeft);
+                    currentYLeft += 5; // Increased line space
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(...COLOR_TEXT);
+                    doc.text(course.institution, column1Start, currentYLeft);
+                    currentYLeft += 9; // Increased space after entry
+                });
+            }
+
+            // 6. Languages (Using the left column)
+            if (state.languages.length > 0) {
+                currentYLeft = checkY(15, currentYLeft);
+                if (currentYLeft > maxContentY) { doc.addPage(); currentYLeft = margin; }
+                currentYLeft = addSectionTitle(column1Start, currentYLeft, 'LANGUAGES');
+
+                doc.setFontSize(13);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(...COLOR_TEXT);
+
+                const languageLines = state.languages.map(lang => {
+                    const stars = '★'.repeat(lang.proficiency) + '☆'.repeat(5 - lang.proficiency);
+                    return `${lang.name}: ${stars}`;
+                }).join(' | ');
+
+                const lines = doc.splitTextToSize(languageLines, column1Width);
+                doc.text(lines, column1Start, currentYLeft);
+                currentYLeft += lines.length * LINE_HEIGHT_DOUBLE + 8; // Use 2.0x line height + extra spacing
+            }
+
+
+            // --- Right Column Sections (Secondary) ---
+
+            // 2. Skills
+            if (state.skills.length > 0) {
+                currentYRight = addSectionTitle(column2Start, currentYRight, 'SKILLS');
+                doc.setFontSize(13);
+                
+                const skillsByCategory = state.skills.reduce((acc, skill) => {
+                    const category = skill.category || 'Other';
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(skill.name);
+                    return acc;
+                }, {});
+
+                const sortedCategories = Object.keys(skillsByCategory).sort();
+
+                sortedCategories.forEach(category => {
+                    currentYRight = checkY(12, currentYRight); // Increased check space
+                    if (currentYRight > maxContentY) {
+                        // If right column overflows, jump to new page and continue in the left column
+                        doc.addPage();
+                        currentYRight = margin;
+                        currentYLeft = margin; 
+                        doc.text('CONTINUED: SKILLS', column1Start, currentYLeft); // Label continuation
+                        currentYLeft += 5;
+                        currentYRight = currentYLeft; // Reset right column start for the new page
+                    }
+
+                    const categoryText = `${category}: `;
+                    
+                    // Draw Category (Bold, Orange)
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(...COLOR_SECONDARY);
+                    doc.text(categoryText, column2Start, currentYRight);
+                    
+                    // Draw Skills (Normal, Gray)
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(...COLOR_TEXT);
+                    const skillsList = skillsByCategory[category].join(', ');
+
+                    // Measure category label width for indentation
+                    const labelWidth = doc.getStringUnitWidth(categoryText) * 13 / doc.internal.scaleFactor;
+                    
+                    const skillLines = doc.splitTextToSize(skillsList, column2Width - labelWidth);
+                    doc.text(skillLines, column2Start + labelWidth, currentYRight);
+                    
+                    currentYRight += skillLines.length * LINE_HEIGHT_DOUBLE + 6; // Use 2.0x line height + increased spacing
+                });
+            }
+
+            // 3. Key Achievements
+            if (state.achievements.length > 0) {
+                currentYRight = checkY(15, currentYRight);
+                if (currentYRight > maxContentY) {
+                    doc.addPage(); currentYRight = margin;
+                    currentYLeft = margin;
+                }
+                currentYRight = addSectionTitle(column2Start, currentYRight, 'KEY ACHIEVEMENTS');
+
+                doc.setFontSize(13);
+                state.achievements.forEach(ach => {
+                    currentYRight = checkY(25, currentYRight); // Increased check space
+                    if (currentYRight > maxContentY) { doc.addPage(); currentYRight = margin; currentYLeft = margin; }
+                    
+                    // Achievement Name (Size 14, Bold, Orange)
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.setTextColor(...COLOR_SECONDARY);
+                    doc.text(ach.name, column2Start, currentYRight);
+                    currentYRight += 5;
+                    
+                    // Description (Bullet points, Size 13, Normal, Gray)
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(13);
+                    doc.setTextColor(...COLOR_TEXT);
+                    const bulletPoints = ach.description.split('\n').filter(line => line.trim());
+                    bulletPoints.forEach(line => {
+                        const bulletText = '• ' + line.trim();
+                        const bulletLines = doc.splitTextToSize(bulletText, column2Width - 4);
+                        
+                        doc.text(bulletLines, column2Start + 4, currentYRight);
+                        currentYRight += bulletLines.length * LINE_HEIGHT_DOUBLE; // Use 2.0x line height
+                    });
+                    currentYRight += 6; // Increased space after entry
+                });
+            }
+
+            // 4. Interests
+            if (state.interests.length > 0) {
+                currentYRight = checkY(15, currentYRight);
+                if (currentYRight > maxContentY) { doc.addPage(); currentYRight = margin; currentYLeft = margin; }
+                currentYRight = addSectionTitle(column2Start, currentYRight, 'INTERESTS');
+                
+                doc.setFontSize(13);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(...COLOR_TEXT);
+                
+                const interestsLine = state.interests.map(i => i.name).join(' | ');
+                const lines = doc.splitTextToSize(interestsLine, column2Width);
+                doc.text(lines, column2Start, currentYRight);
+                currentYRight += lines.length * LINE_HEIGHT_DOUBLE + 8; // Use 2.0x line height + extra spacing
+            }
+
+
+            // --- Final Output ---
+            const filename = (p.fullName || 'Resume').replace(/\s+/g, '_') + '.pdf';
+            doc.save(filename);
+            window.showMessage('PDF generated and downloaded successfully!', 'success');
+        };
+
+        // --- Event Listeners ---
+        generatePdfBtn.addEventListener('click', () => {
+             // 1. Gather Personal Info one last time
+            state.personal = {
+                fullName: inputs.fullName.value.trim(),
+                roleApplied: inputs.roleApplied.value.trim(),
+                email: inputs.email.value.trim(),
+                phone: inputs.phone.value.trim(),
+                linkedin: inputs.linkedin.value.trim(),
+                github: inputs.github.value.trim(),
+                website: inputs.website.value.trim(),
+                location: inputs.location.value.trim(),
+                summary: inputs.summary.value.trim(),
+            };
+
+            if (!state.personal.fullName || state.experience.length === 0) {
+                 window.showMessage('Please enter your Full Name and at least one Experience entry before generating the PDF.', 'error');
+                 return;
+            }
+
+            generatePDFContent();
         });
 
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', loadDataLocally);
     </script>
 </body>
 </html>
