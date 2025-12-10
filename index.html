@@ -1,1 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* General Styles */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .card { border-left: 4px solid #3b82f6; }
+        .input-group label { font-weight: 600; font-size: 0.9rem; color: #1f2937; margin-bottom: 4px; display: block; }
+        
+        /* Default Input Styling (Applied to inputs without error) */
+        .base-input-style { 
+            width: 100%; 
+            padding: 8px 12px; 
+            border: 1px solid #d1d5db; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            transition: border-color 0.2s, box-shadow 0.2s; 
+            /* Tailwind equivalent of focus styles in CSS */
+        }
+        .base-input-style:focus { 
+            border-color: #3b82f6; 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); 
+        }
 
+        /* Error Input Styling */
+        .error-input {
+            border-color: #ef4444 !important; /* Red */
+        }
+        .error-input:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5) !important;
+        }
+
+        .experience-description ul, .achievement-description ul {
+            list-style: disc;
+            margin-left: 1.25rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-6 text-center">Resume Builder</h1>
+        <p class="text-center text-lg text-gray-600 mb-10">Enter your professional data below to generate your resume.</p>
+
+        <!-- Main Form Wrapper -->
+        <form id="resume-form" class="space-y-10">
+            
+            <!-- 1. Personal Information -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">1. Personal Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+                    <div class="input-group">
+                        <label for="full-name">Full Name</label>
+                        <input type="text" id="full-name" placeholder="Bridget Sarah Nazi" class="base-input-style">
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="bsarahnazi@gamil.com" class="base-input-style">
+                    </div>
+                    <div class="input-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" placeholder="09050772152" class="base-input-style">
+                    </div>
+                    <div class="input-group">
+                        <label for="linkedin">LinkedIn Profile URL</label>
+                        <input type="url" id="linkedin" placeholder="https://linkedin.com/in/" class="base-input-style">
+                    </div>
+                    <div class="input-group">
+                        <label for="github">GitHub Profile URL</label>
+                        <input type="url" id="github" placeholder="https://github.com/arahvii/Resume_builder" class="base-input-style">
+                    </div>
+                    <div class="input-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" placeholder="Cagayan de Oro, Philippines" class="base-input-style">
+                    </div>
+                    <div class="input-group md:col-span-2">
+                        <label for="summary">Professional Summary (4-5 lines)</label>
+                        <textarea id="summary" rows="4" placeholder="Skilled Backend Software Developer proficient in building and maintaining robust, high-performance systems..." class="base-input-style"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Experience -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">2. Experience</h2>
+                
+                <!-- Experience List -->
+                <div id="experience-list" class="space-y-4 mb-6 p-4">
+                    <!-- Dynamic list items will go here -->
+                </div>
+
+                <!-- Add New Experience Form -->
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Experience</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label for="exp-title">Job Title</label>
+                            <input type="text" id="exp-title" placeholder="Software Developer" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="exp-company">Company</label>
+                            <input type="text" id="exp-company" placeholder="TechSoup" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="exp-start-date">Start Date (YYYY-MM)</label>
+                            <input type="month" id="exp-start-date" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="exp-end-date">End Date (YYYY-MM or Leave blank for 'Present')</label>
+                            <input type="month" id="exp-end-date" class="base-input-style">
+                        </div>
+                        <div class="input-group md:col-span-2">
+                            <label for="exp-description">Description (One bullet point per line)</label>
+                            <textarea id="exp-description" rows="5" placeholder="Highlight your accomplishments, using numbers if possible." class="base-input-style"></textarea>
+                        </div>
+                    </div>
+                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
+                    <button type="button" id="add-experience-btn"
+                        class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
+                        Add Experience
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Education -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">3. Education</h2>
+                
+                <!-- Education List -->
+                <div id="education-list" class="space-y-4 mb-6 p-4">
+                    <!-- Dynamic list items will go here -->
+                </div>
+
+                <!-- Add New Education Form -->
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Education</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label for="edu-degree">Degree / Field of Study</label>
+                            <input type="text" id="edu-degree" placeholder="BSIT" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="edu-school">School / University</label>
+                            <input type="text" id="edu-school" placeholder="University of the Philippines" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="edu-start-date">Start Date (YYYY-MM)</label>
+                            <input type="month" id="edu-start-date" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="edu-end-date">End Date (YYYY-MM or Leave blank for 'Present')</label>
+                            <input type="month" id="edu-end-date" class="base-input-style">
+                        </div>
+                    </div>
+                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
+                    <button type="button" id="add-education-btn"
+                        class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
+                        Add Education
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Skills -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">4. Skills</h2>
+                
+                <!-- Skills List -->
+                <div id="skills-list" class="flex flex-wrap gap-2 mb-6 p-4">
+                    <!-- Dynamic skill tags will go here -->
+                </div>
+
+                <!-- Add New Skill Form -->
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Skill</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label for="skill-category">Skill Category (e.g., 'Languages', 'Databases')</label>
+                            <input type="text" id="skill-category" placeholder="Programming Languages" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="skill-name">Skill Name (e.g., 'Python', 'JavaScript', 'SQL')</label>
+                            <input type="text" id="skill-name" placeholder="Python, JavaScript, Flask" class="base-input-style">
+                        </div>
+                    </div>
+                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
+                    <button type="button" id="add-skill-btn"
+                        class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
+                        Add Skill
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. Key Achievements (New Section) -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">5. Key Achievements</h2>
+                <p class="text-gray-500 pl-4 mb-6">
+                    Quantifiable accomplishments and results (use a clear title and description).
+                </p>
+
+                <div id="achievements-list" class="space-y-4 mb-6 p-4">
+                    <!-- Achievement items will be added here -->
+                </div>
+                
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Achievement</h3>
+                    
+                    <div class="mb-4">
+                        <label for="achievement-name" class="block text-sm font-medium text-gray-700 mb-1">
+                            Achievement Name (e.g., Performance Optimization)
+                        </label>
+                        <input type="text" id="achievement-name" placeholder="A concise title for the achievement"
+                            class="base-input-style">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="achievement-description" class="block text-sm font-medium text-gray-700 mb-1">
+                            Achievement Description
+                        </label>
+                        <textarea id="achievement-description" rows="3"
+                            placeholder="Detailed description of the achievement and contribution (e.g., Reduced database latency by 40\%)."
+                            class="base-input-style"></textarea>
+                    </div>
+
+                    <!-- FIX APPLIED: Ensured type="button" is set -->
+                    <button type="button" id="add-achievement-btn"
+                        class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md">
+                        Add Key Achievement
+                    </button>
+                </div>
+            </div>
+
+            <!-- 6. Courses & Training -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">6. Courses & Training</h2>
+                
+                <!-- Courses List -->
+                <div id="course-list" class="space-y-4 mb-6 p-4">
+                    <!-- Dynamic course items will go here -->
+                </div>
+
+                <!-- Add New Course Form -->
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Course</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label for="course-name">Course Name</label>
+                            <input type="text" id="course-name" placeholder="e.g., AWS Certified Developer - Associate" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="course-institution">Issuing Institution</label>
+                            <input type="text" id="course-institution" placeholder="e.g., Amazon Web Services (AWS)" class="base-input-style">
+                        </div>
+                    </div>
+                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
+                    <button type="button" id="add-course-btn"
+                        class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
+                        Add Course/Training
+                    </button>
+                </div>
+            </div>
+
+            <!-- 7. Interests -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">7. Interests</h2>
+                
+                <!-- Interests List -->
+                <div id="interest-list" class="flex flex-wrap gap-2 mb-6 p-4">
+                    <!-- Dynamic interest tags will go here -->
+                </div>
+
+                <!-- Add New Interest Form -->
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Interest</h3>
+                    <div class="input-group">
+                        <label for="interest-name">Interest / Passion</label>
+                        <input type="text" id="interest-name" placeholder="e.g., Security & Cryptography, Gaming" class="base-input-style">
+                    </div>
+                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
+                    <button type="button" id="add-interest-btn"
+                        class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
+                        Add Interest
+                    </button>
+                </div>
+            </div>
+
+            <!-- 8. Languages -->
+            <div class="card p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-700 pl-4 mb-6">8. Languages</h2>
+                
+                <!-- Languages List -->
+                <div id="language-list" class="space-y-4 mb-6 p-4">
+                    <!-- Dynamic language items will go here -->
+                </div>
+
+                <!-- Add New Language Form -->
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-medium text-blue-800 mb-4">Add New Language</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label for="lang-name">Language Name</label>
+                            <input type="text" id="lang-name" placeholder="e.g., Japanese, Spanish" class="base-input-style">
+                        </div>
+                        <div class="input-group">
+                            <label for="lang-proficiency">Proficiency (1-5)</label>
+                            <input type="number" id="lang-proficiency" min="1" max="5" placeholder="5 (Native), 3 (Intermediate)" class="base-input-style">
+                        </div>
+                    </div>
+                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
+                    <button type="button" id="add-language-btn"
+                        class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
+                        Add Language
+                    </button>
+                </div>
+            </div>
+
+            <!-- Save Button (Main Form Submission) -->
+            <div class="text-center pt-8 pb-12">
+                <!-- IMPORTANT: This button should remain type="submit" to submit the main form, but we will use event.preventDefault() in JS to control the process. -->
+                <button type="submit" id="save-data-btn"
+                    class="px-12 py-4 bg-green-600 text-white text-xl font-bold rounded-full hover:bg-green-700 transition duration-300 shadow-xl shadow-green-300/50">
+                    Save Resume Data
+                </button>
+            </div>
+            
+        </form>
+    </div>
+
+    <!-- Status Message Container (for error/success feedback) -->
+    <div id="status-message" class="fixed bottom-4 right-4 p-4 rounded-lg text-white shadow-lg z-50 hidden transition-opacity duration-300"></div>
+
+    <script type="module">
+        // --- Firebase Setup ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        setLogLevel('debug'); // Enable Firestore logging
+
+        // Global variables for Firebase context
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId;
+        let isAuthReady = false;
+
+        // Initialize App and Auth
+        if (firebaseConfig) {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                } else {
+                    try {
+                        if (initialAuthToken) {
+                            const userCredential = await signInWithCustomToken(auth, initialAuthToken);
+                            userId = userCredential.user.uid;
+                        } else {
+                            const userCredential = await signInAnonymously(auth);
+                            userId = userCredential.user.uid;
+                        }
+                    } catch (error) {
+                        console.error("Firebase Auth failed:", error);
+                        // Fallback to a random ID if sign-in fails, though Firestore access might be restricted.
+                        userId = crypto.randomUUID(); 
+                    }
+                }
+                isAuthReady = true;
+                console.log("Auth Ready. User ID:", userId);
+                loadResumeData();
+            });
+        }
+
+        // --- State Management ---
+        const state = {
+            personal: {},
+            experience: [],
+            education: [],
+            skills: [],
+            achievements: [], // Added achievements array
+            courses: [],
+            interests: [],
+            languages: []
+        };
+
+        // --- DOM Elements ---
+        const form = document.getElementById('resume-form');
+        const statusMessage = document.getElementById('status-message');
+
+        // Lists
+        const experienceList = document.getElementById('experience-list');
+        const educationList = document.getElementById('education-list');
+        const skillsList = document.getElementById('skills-list');
+        const achievementsList = document.getElementById('achievements-list'); // New list
+        const courseList = document.getElementById('course-list');
+        const interestList = document.getElementById('interest-list');
+        const languageList = document.getElementById('language-list');
+
+        // Inputs
+        const inputs = {
+            // Personal
+            fullName: document.getElementById('full-name'),
+            email: document.getElementById('email'),
+            phone: document.getElementById('phone'),
+            linkedin: document.getElementById('linkedin'),
+            github: document.getElementById('github'),
+            location: document.getElementById('location'),
+            summary: document.getElementById('summary'),
+            
+            // Experience
+            expTitle: document.getElementById('exp-title'),
+            expCompany: document.getElementById('exp-company'),
+            expStartDate: document.getElementById('exp-start-date'),
+            expEndDate: document.getElementById('exp-end-date'),
+            expDescription: document.getElementById('exp-description'),
+
+            // Education
+            eduDegree: document.getElementById('edu-degree'),
+            eduSchool: document.getElementById('edu-school'),
+            eduStartDate: document.getElementById('edu-start-date'),
+            eduEndDate: document.getElementById('edu-end-date'),
+
+            // Skills
+            skillCategory: document.getElementById('skill-category'),
+            skillName: document.getElementById('skill-name'),
+
+            // Achievements (New)
+            achievementName: document.getElementById('achievement-name'),
+            achievementDescription: document.getElementById('achievement-description'),
+
+            // Courses
+            courseName: document.getElementById('course-name'),
+            courseInstitution: document.getElementById('course-institution'),
+
+            // Interests
+            interestName: document.getElementById('interest-name'),
+
+            // Languages
+            langName: document.getElementById('lang-name'),
+            langProficiency: document.getElementById('lang-proficiency'),
+        };
+
+        // --- Utility Functions ---
+
+        const showMessage = (message, type = 'success') => {
+            let className = '';
+            if (type === 'success') {
+                className = 'bg-green-500';
+            } else if (type === 'error') {
+                className = 'bg-red-500';
+            } else if (type === 'info') {
+                className = 'bg-blue-500';
+            }
+            statusMessage.textContent = message;
+            statusMessage.className = `fixed bottom-4 right-4 p-4 rounded-lg text-white shadow-lg z-50 transition-opacity duration-300 ${className}`;
+            statusMessage.classList.remove('hidden', 'opacity-0');
+            statusMessage.classList.add('opacity-100');
+
+            setTimeout(() => {
+                statusMessage.classList.remove('opacity-100');
+                statusMessage.classList.add('opacity-0');
+                setTimeout(() => {
+                    statusMessage.classList.add('hidden');
+                }, 300);
+            }, 4000);
+        };
+
+        const generateItemId = () => crypto.randomUUID();
+
+        // --- Renderer Functions ---
+
+        const renderExperience = () => {
+            experienceList.innerHTML = state.experience.length === 0 ? 
+                '<p class="text-gray-400 italic p-4">No experience added yet.</p>' : '';
+            
+            state.experience.forEach((exp) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
+                
+                const descriptionHtml = exp.description.split('\n').map(line => `<li>${line.trim()}</li>`).join('');
+
+                div.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-lg text-gray-800">${exp.title} at ${exp.company}</p>
+                        <p class="text-sm text-gray-600">${exp.startDate} - ${exp.endDate}</p>
+                        <div class="experience-description"><ul>${descriptionHtml}</ul></div>
+                    </div>
+                    <button type="button" onclick="removeItem('experience', '${exp.id}')" 
+                        class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                experienceList.appendChild(div);
+            });
+        };
+
+        const renderEducation = () => {
+            educationList.innerHTML = state.education.length === 0 ? 
+                '<p class="text-gray-400 italic p-4">No education added yet.</p>' : '';
+            
+            state.education.forEach((edu) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
+                
+                div.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-lg text-gray-800">${edu.degree} at ${edu.school}</p>
+                        <p class="text-sm text-gray-600">${edu.startDate} - ${edu.endDate}</p>
+                    </div>
+                    <button type="button" onclick="removeItem('education', '${edu.id}')" 
+                        class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                educationList.appendChild(div);
+            });
+        };
+
+        const renderSkills = () => {
+            skillsList.innerHTML = state.skills.length === 0 ? 
+                '<p class="text-gray-400 italic p-4 w-full">No skills added yet.</p>' : '';
+
+            const skillsByCategory = state.skills.reduce((acc, skill) => {
+                const category = skill.category || 'Uncategorized';
+                if (!acc[category]) {
+                    acc[category] = [];
+                }
+                acc[category].push(skill);
+                return acc;
+            }, {});
+
+            for (const category in skillsByCategory) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'w-full mb-3';
+                categoryDiv.innerHTML = `<p class="font-semibold text-gray-700 mb-1">${category}:</p>`;
+                
+                skillsByCategory[category].forEach(skill => {
+                    const skillSpan = document.createElement('span');
+                    skillSpan.className = 'inline-flex items-center px-3 py-1 mr-2 text-sm font-medium bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-red-100 hover:text-red-800 transition duration-150';
+                    skillSpan.textContent = skill.name;
+                    skillSpan.onclick = () => removeItem('skills', skill.id);
+                    categoryDiv.appendChild(skillSpan);
+                });
+                skillsList.appendChild(categoryDiv);
+            }
+        };
+
+        // NEW Renderer for Achievements
+        const renderAchievements = () => {
+            achievementsList.innerHTML = state.achievements.length === 0 ? 
+                '<p class="text-gray-400 italic p-4">No key achievements added yet.</p>' : '';
+            
+            state.achievements.forEach((ach) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
+                
+                const descriptionHtml = ach.description.split('\n').map(line => `<li>${line.trim()}</li>`).join('');
+
+                div.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-gray-800">${ach.name}</p>
+                        <div class="experience-description"><ul>${descriptionHtml}</ul></div>
+                    </div>
+                    <button type="button" onclick="removeItem('achievements', '${ach.id}')" 
+                        class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                achievementsList.appendChild(div);
+            });
+        };
+
+
+        const renderCourses = () => {
+            courseList.innerHTML = state.courses.length === 0 ? 
+                '<p class="text-gray-400 italic p-4">No courses or training added yet.</p>' : '';
+            
+            state.courses.forEach((course) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
+                
+                div.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-gray-800">${course.name}</p>
+                        <p class="text-sm text-gray-600">${course.institution}</p>
+                    </div>
+                    <button type="button" onclick="removeItem('courses', '${course.id}')" 
+                        class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                courseList.appendChild(div);
+            });
+        };
+
+        const renderInterests = () => {
+            interestList.innerHTML = state.interests.length === 0 ? 
+                '<p class="text-gray-400 italic p-4 w-full">No interests added yet.</p>' : '';
+            
+            state.interests.forEach(interest => {
+                const interestSpan = document.createElement('span');
+                interestSpan.className = 'inline-flex items-center px-3 py-1 text-sm font-medium bg-purple-100 text-purple-800 rounded-full cursor-pointer hover:bg-red-100 hover:text-red-800 transition duration-150';
+                interestSpan.textContent = interest.name;
+                interestSpan.onclick = () => removeItem('interests', interest.id);
+                interestList.appendChild(interestSpan);
+            });
+        };
+
+        const renderLanguages = () => {
+            languageList.innerHTML = state.languages.length === 0 ? 
+                '<p class="text-gray-400 italic p-4">No languages added yet.</p>' : '';
+            
+            state.languages.forEach((lang) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
+                
+                // Create proficiency dots
+                let dots = '';
+                for (let i = 1; i <= 5; i++) {
+                    const color = i <= lang.proficiency ? 'bg-blue-600' : 'bg-gray-300';
+                    dots += `<span class="h-3 w-3 rounded-full ${color} mr-1"></span>`;
+                }
+
+                div.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <p class="font-semibold text-gray-800">${lang.name}</p>
+                        <div class="flex items-center">
+                            ${dots}
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeItem('languages', '${lang.id}')" 
+                        class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                languageList.appendChild(div);
+            });
+        };
+
+        const renderAll = () => {
+            renderExperience();
+            renderEducation();
+            renderSkills();
+            renderAchievements(); // Call new renderer
+            renderCourses();
+            renderInterests();
+            renderLanguages();
+        };
+
+        // --- Data Persistence (Firestore) ---
+
+        const getResumeDocRef = () => {
+            if (db && userId) {
+                // Public data path: /artifacts/{appId}/public/data/resumes/{userId}
+                return doc(db, 'artifacts', appId, 'public', 'data', 'resumes', userId);
+            }
+            return null;
+        };
+        
+        const saveResumeData = async (data) => {
+            const docRef = getResumeDocRef();
+            if (!docRef) {
+                showMessage("Database not ready or user not logged in.", 'error');
+                return;
+            }
+
+            try {
+                // Remove ID from personal info before saving
+                const dataToSave = {
+                    ...data,
+                    personal: (({ id, ...rest }) => rest)(data.personal)
+                };
+                
+                await setDoc(docRef, dataToSave);
+                showMessage("Resume data saved successfully!", 'success');
+            } catch (e) {
+                console.error("Error saving document: ", e);
+                showMessage("Failed to save data. Check console for details.", 'error');
+            }
+        };
+
+        const loadResumeData = () => {
+            const docRef = getResumeDocRef();
+            if (!docRef) return; // Wait for auth if not ready
+
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const loadedData = docSnap.data();
+                    
+                    // Load Personal Information
+                    if (loadedData.personal) {
+                        Object.assign(state.personal, loadedData.personal);
+                        inputs.fullName.value = state.personal.fullName || '';
+                        inputs.email.value = state.personal.email || '';
+                        inputs.phone.value = state.personal.phone || '';
+                        inputs.linkedin.value = state.personal.linkedin || '';
+                        inputs.github.value = state.personal.github || '';
+                        inputs.location.value = state.personal.location || '';
+                        inputs.summary.value = state.personal.summary || '';
+                    }
+
+                    // Load List Items
+                    state.experience = loadedData.experience || [];
+                    state.education = loadedData.education || [];
+                    state.skills = loadedData.skills || [];
+                    state.achievements = loadedData.achievements || []; // Load new data
+                    state.courses = loadedData.courses || [];
+                    state.interests = loadedData.interests || [];
+                    state.languages = loadedData.languages || [];
+
+                    renderAll();
+                    console.log("Resume data loaded and rendered.");
+                } else {
+                    console.log("No resume data found for this user. Starting fresh.");
+                    renderAll(); // Render empty lists
+                }
+            }, (error) => {
+                console.error("Error listening to document: ", error);
+                showMessage("Failed to load real-time data.", 'error');
+            });
+        };
+
+        // --- CRUD Functions ---
+
+        // Global function to remove items
+        window.removeItem = (arrayName, itemId) => {
+            state[arrayName] = state[arrayName].filter(item => item.id !== itemId);
+            renderAll();
+            saveResumeData(state);
+            showMessage(`Item removed from ${arrayName}.`, 'info');
+        };
+
+        // --- Event Handlers for Adding Items ---
+
+        // Experience
+        document.getElementById('add-experience-btn').addEventListener('click', () => {
+            const title = inputs.expTitle.value.trim();
+            const company = inputs.expCompany.value.trim();
+            const startDate = inputs.expStartDate.value.trim();
+            const endDate = inputs.expEndDate.value.trim() || 'Present';
+            const description = inputs.expDescription.value.trim();
+
+            if (!title || !company || !startDate || !description) {
+                showMessage('Please fill all required experience fields.', 'error');
+                return;
+            }
+
+            state.experience.push({
+                id: generateItemId(),
+                title, company, startDate, endDate, description
+            });
+
+            // Clear inputs
+            inputs.expTitle.value = inputs.expCompany.value = inputs.expStartDate.value = inputs.expEndDate.value = inputs.expDescription.value = '';
+            
+            renderExperience();
+            saveResumeData(state);
+            showMessage('Experience added!', 'success');
+        });
+
+        // Education
+        document.getElementById('add-education-btn').addEventListener('click', () => {
+            const degree = inputs.eduDegree.value.trim();
+            const school = inputs.eduSchool.value.trim();
+            const startDate = inputs.eduStartDate.value.trim();
+            const endDate = inputs.eduEndDate.value.trim() || 'Present';
+
+            if (!degree || !school || !startDate) {
+                showMessage('Please fill all required education fields.', 'error');
+                return;
+            }
+
+            state.education.push({
+                id: generateItemId(),
+                degree, school, startDate, endDate
+            });
+
+            // Clear inputs
+            inputs.eduDegree.value = inputs.eduSchool.value = inputs.eduStartDate.value = inputs.eduEndDate.value = '';
+            
+            renderEducation();
+            saveResumeData(state);
+            showMessage('Education added!', 'success');
+        });
+
+        // Skills
+        document.getElementById('add-skill-btn').addEventListener('click', () => {
+            const category = inputs.skillCategory.value.trim();
+            const namesString = inputs.skillName.value.trim();
+
+            if (!category || !namesString) {
+                showMessage('Please fill both skill fields.', 'error');
+                return;
+            }
+
+            const newSkills = namesString.split(',').map(name => ({
+                id: generateItemId(),
+                category: category,
+                name: name.trim()
+            })).filter(s => s.name); // Filter out empty names
+
+            state.skills.push(...newSkills);
+
+            // Clear inputs
+            inputs.skillCategory.value = inputs.skillName.value = '';
+            
+            renderSkills();
+            saveResumeData(state);
+            showMessage(`${newSkills.length} skill(s) added!`, 'success');
+        });
+
+        // Achievements (New Handler)
+        document.getElementById('add-achievement-btn').addEventListener('click', () => {
+            const name = inputs.achievementName.value.trim();
+            const description = inputs.achievementDescription.value.trim();
+
+            if (!name || !description) {
+                showMessage('Please fill out both the Achievement Name and Description fields.', 'error');
+                return;
+            }
+
+            state.achievements.push({
+                id: generateItemId(),
+                name, description
+            });
+
+            // Clear inputs
+            inputs.achievementName.value = inputs.achievementDescription.value = '';
+            
+            renderAchievements();
+            saveResumeData(state);
+            showMessage('Key Achievement added!', 'success');
+        });
+
+
+        // Courses
+        document.getElementById('add-course-btn').addEventListener('click', () => {
+            const name = inputs.courseName.value.trim();
+            const institution = inputs.courseInstitution.value.trim();
+
+            if (!name || !institution) {
+                showMessage('Please fill all course fields.', 'error');
+                return;
+            }
+
+            state.courses.push({
+                id: generateItemId(),
+                name, institution
+            });
+
+            // Clear inputs
+            inputs.courseName.value = inputs.courseInstitution.value = '';
+            
+            renderCourses();
+            saveResumeData(state);
+            showMessage('Course added!', 'success');
+        });
+
+        // Interests
+        document.getElementById('add-interest-btn').addEventListener('click', () => {
+            const name = inputs.interestName.value.trim();
+
+            if (!name) {
+                showMessage('Please fill the interest field.', 'error');
+                return;
+            }
+
+            state.interests.push({
+                id: generateItemId(),
+                name
+            });
+
+            // Clear inputs
+            inputs.interestName.value = '';
+            
+            renderInterests();
+            saveResumeData(state);
+            showMessage('Interest added!', 'success');
+        });
+
+        // Languages
+        document.getElementById('add-language-btn').addEventListener('click', () => {
+            const name = inputs.langName.value.trim();
+            const proficiency = parseInt(inputs.langProficiency.value, 10);
+
+            if (!name || isNaN(proficiency) || proficiency < 1 || proficiency > 5) {
+                showMessage('Please provide a language name and a proficiency level (1-5).', 'error');
+                return;
+            }
+
+            state.languages.push({
+                id: generateItemId(),
+                name, proficiency
+            });
+
+            // Clear inputs
+            inputs.langName.value = inputs.langProficiency.value = '';
+            
+            renderLanguages();
+            saveResumeData(state);
+            showMessage('Language added!', 'success');
+        });
+
+        // --- Main Form Submission Handler ---
+        form.addEventListener('submit', (event) => {
+            // CRITICAL FIX: Prevent the default form submission (page reload)
+            event.preventDefault(); 
+            
+            // 1. Collect Personal Data
+            state.personal = {
+                id: userId || generateItemId(), // Use userId as the ID for personal block
+                fullName: inputs.fullName.value.trim(),
+                email: inputs.email.value.trim(),
+                phone: inputs.phone.value.trim(),
+                linkedin: inputs.linkedin.value.trim(),
+                github: inputs.github.value.trim(),
+                location: inputs.location.value.trim(),
+                summary: inputs.summary.value.trim(),
+            };
+
+            // 2. Save all collected data to Firestore
+            saveResumeData(state);
+        });
+
+        // Initial setup only runs after onAuthStateChanged is complete
+        // The loadResumeData() call inside onAuthStateChanged handles the initial rendering.
+
+    </script>
+</body>
+</html>
