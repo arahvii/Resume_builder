@@ -21,7 +21,6 @@
             border-radius: 8px; 
             font-size: 1rem; 
             transition: border-color 0.2s, box-shadow 0.2s; 
-            /* Tailwind equivalent of focus styles in CSS */
         }
         .base-input-style:focus { 
             border-color: #3b82f6; 
@@ -122,7 +121,6 @@
                             <textarea id="exp-description" rows="5" placeholder="Highlight your accomplishments, using numbers if possible." class="base-input-style"></textarea>
                         </div>
                     </div>
-                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
                     <button type="button" id="add-experience-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
                         Add Experience
@@ -160,7 +158,6 @@
                             <input type="month" id="edu-end-date" class="base-input-style">
                         </div>
                     </div>
-                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
                     <button type="button" id="add-education-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
                         Add Education
@@ -190,7 +187,6 @@
                             <input type="text" id="skill-name" placeholder="Python, JavaScript, Flask" class="base-input-style">
                         </div>
                     </div>
-                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
                     <button type="button" id="add-skill-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
                         Add Skill
@@ -229,7 +225,6 @@
                             class="base-input-style"></textarea>
                     </div>
 
-                    <!-- FIX APPLIED: Ensured type="button" is set -->
                     <button type="button" id="add-achievement-btn"
                         class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md">
                         Add Key Achievement
@@ -259,7 +254,6 @@
                             <input type="text" id="course-institution" placeholder="e.g., Amazon Web Services (AWS)" class="base-input-style">
                         </div>
                     </div>
-                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
                     <button type="button" id="add-course-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
                         Add Course/Training
@@ -283,7 +277,6 @@
                         <label for="interest-name">Interest / Passion</label>
                         <input type="text" id="interest-name" placeholder="e.g., Security & Cryptography, Gaming" class="base-input-style">
                     </div>
-                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
                     <button type="button" id="add-interest-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
                         Add Interest
@@ -313,7 +306,6 @@
                             <input type="number" id="lang-proficiency" min="1" max="5" placeholder="5 (Native), 3 (Intermediate)" class="base-input-style">
                         </div>
                     </div>
-                    <!-- FIX APPLIED: Changed type="submit" to type="button" -->
                     <button type="button" id="add-language-btn"
                         class="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md w-full md:w-auto">
                         Add Language
@@ -323,7 +315,6 @@
 
             <!-- Save Button (Main Form Submission) -->
             <div class="text-center pt-8 pb-12">
-                <!-- IMPORTANT: This button should remain type="submit" to submit the main form, but we will use event.preventDefault() in JS to control the process. -->
                 <button type="submit" id="save-data-btn"
                     class="px-12 py-4 bg-green-600 text-white text-xl font-bold rounded-full hover:bg-green-700 transition duration-300 shadow-xl shadow-green-300/50">
                     Save Resume Data
@@ -337,51 +328,7 @@
     <div id="status-message" class="fixed bottom-4 right-4 p-4 rounded-lg text-white shadow-lg z-50 hidden transition-opacity duration-300"></div>
 
     <script type="module">
-        // --- Firebase Setup ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        setLogLevel('debug'); // Enable Firestore logging
-
-        // Global variables for Firebase context
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db, auth, userId;
-        let isAuthReady = false;
-
-        // Initialize App and Auth
-        if (firebaseConfig) {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                } else {
-                    try {
-                        if (initialAuthToken) {
-                            const userCredential = await signInWithCustomToken(auth, initialAuthToken);
-                            userId = userCredential.user.uid;
-                        } else {
-                            const userCredential = await signInAnonymously(auth);
-                            userId = userCredential.user.uid;
-                        }
-                    } catch (error) {
-                        console.error("Firebase Auth failed:", error);
-                        // Fallback to a random ID if sign-in fails, though Firestore access might be restricted.
-                        userId = crypto.randomUUID(); 
-                    }
-                }
-                isAuthReady = true;
-                console.log("Auth Ready. User ID:", userId);
-                loadResumeData();
-            });
-        }
+        // NO FIREBASE CODE - Using Local Storage for Immediate Persistence
 
         // --- State Management ---
         const state = {
@@ -389,7 +336,7 @@
             experience: [],
             education: [],
             skills: [],
-            achievements: [], // Added achievements array
+            achievements: [], 
             courses: [],
             interests: [],
             languages: []
@@ -403,7 +350,7 @@
         const experienceList = document.getElementById('experience-list');
         const educationList = document.getElementById('education-list');
         const skillsList = document.getElementById('skills-list');
-        const achievementsList = document.getElementById('achievements-list'); // New list
+        const achievementsList = document.getElementById('achievements-list');
         const courseList = document.getElementById('course-list');
         const interestList = document.getElementById('interest-list');
         const languageList = document.getElementById('language-list');
@@ -436,7 +383,7 @@
             skillCategory: document.getElementById('skill-category'),
             skillName: document.getElementById('skill-name'),
 
-            // Achievements (New)
+            // Achievements
             achievementName: document.getElementById('achievement-name'),
             achievementDescription: document.getElementById('achievement-description'),
 
@@ -454,7 +401,8 @@
 
         // --- Utility Functions ---
 
-        const showMessage = (message, type = 'success') => {
+        // Expose globally for inline onclick
+        window.showMessage = (message, type = 'success') => {
             let className = '';
             if (type === 'success') {
                 className = 'bg-green-500';
@@ -477,7 +425,8 @@
             }, 4000);
         };
 
-        const generateItemId = () => crypto.randomUUID();
+        // Expose globally for inline onclick
+        window.generateItemId = () => crypto.randomUUID();
 
         // --- Renderer Functions ---
 
@@ -489,7 +438,7 @@
                 const div = document.createElement('div');
                 div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
                 
-                const descriptionHtml = exp.description.split('\n').map(line => `<li>${line.trim()}</li>`).join('');
+                const descriptionHtml = exp.description.split('\n').map(line => line.trim() ? `<li>${line.trim()}</li>` : '').join('');
 
                 div.innerHTML = `
                     <div>
@@ -545,7 +494,12 @@
                 return acc;
             }, {});
 
-            for (const category in skillsByCategory) {
+            // Sort categories for consistent display
+            const sortedCategories = Object.keys(skillsByCategory).sort();
+
+            skillsList.innerHTML = ''; // Clear the list before rendering
+
+            sortedCategories.forEach(category => {
                 const categoryDiv = document.createElement('div');
                 categoryDiv.className = 'w-full mb-3';
                 categoryDiv.innerHTML = `<p class="font-semibold text-gray-700 mb-1">${category}:</p>`;
@@ -554,14 +508,14 @@
                     const skillSpan = document.createElement('span');
                     skillSpan.className = 'inline-flex items-center px-3 py-1 mr-2 text-sm font-medium bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-red-100 hover:text-red-800 transition duration-150';
                     skillSpan.textContent = skill.name;
-                    skillSpan.onclick = () => removeItem('skills', skill.id);
+                    // Note: removeItem is global now
+                    skillSpan.onclick = () => window.removeItem('skills', skill.id); 
                     categoryDiv.appendChild(skillSpan);
                 });
                 skillsList.appendChild(categoryDiv);
-            }
+            });
         };
 
-        // NEW Renderer for Achievements
         const renderAchievements = () => {
             achievementsList.innerHTML = state.achievements.length === 0 ? 
                 '<p class="text-gray-400 italic p-4">No key achievements added yet.</p>' : '';
@@ -570,12 +524,12 @@
                 const div = document.createElement('div');
                 div.className = 'p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-start';
                 
-                const descriptionHtml = ach.description.split('\n').map(line => `<li>${line.trim()}</li>`).join('');
+                const descriptionHtml = ach.description.split('\n').map(line => line.trim() ? `<li>${line.trim()}</li>` : '').join('');
 
                 div.innerHTML = `
                     <div>
                         <p class="font-semibold text-gray-800">${ach.name}</p>
-                        <div class="experience-description"><ul>${descriptionHtml}</ul></div>
+                        <div class="achievement-description"><ul>${descriptionHtml}</ul></div>
                     </div>
                     <button type="button" onclick="removeItem('achievements', '${ach.id}')" 
                         class="text-red-500 hover:text-red-700 text-sm ml-4 p-1 rounded-full hover:bg-red-100 transition">
@@ -621,7 +575,8 @@
                 const interestSpan = document.createElement('span');
                 interestSpan.className = 'inline-flex items-center px-3 py-1 text-sm font-medium bg-purple-100 text-purple-800 rounded-full cursor-pointer hover:bg-red-100 hover:text-red-800 transition duration-150';
                 interestSpan.textContent = interest.name;
-                interestSpan.onclick = () => removeItem('interests', interest.id);
+                // Note: removeItem is global now
+                interestSpan.onclick = () => window.removeItem('interests', interest.id);
                 interestList.appendChild(interestSpan);
             });
         };
@@ -659,97 +614,70 @@
             });
         };
 
-        const renderAll = () => {
+        // Expose globally for form updates
+        window.renderAll = () => {
             renderExperience();
             renderEducation();
             renderSkills();
-            renderAchievements(); // Call new renderer
+            renderAchievements(); 
             renderCourses();
             renderInterests();
             renderLanguages();
         };
 
-        // --- Data Persistence (Firestore) ---
+        // --- Local Storage Persistence ---
+        const LOCAL_STORAGE_KEY = 'resumeBuilderData';
 
-        const getResumeDocRef = () => {
-            if (db && userId) {
-                // Public data path: /artifacts/{appId}/public/data/resumes/{userId}
-                return doc(db, 'artifacts', appId, 'public', 'data', 'resumes', userId);
-            }
-            return null;
-        };
-        
-        const saveResumeData = async (data) => {
-            const docRef = getResumeDocRef();
-            if (!docRef) {
-                showMessage("Database not ready or user not logged in.", 'error');
-                return;
-            }
-
+        const saveDataLocally = () => {
             try {
-                // Remove ID from personal info before saving
-                const dataToSave = {
-                    ...data,
-                    personal: (({ id, ...rest }) => rest)(data.personal)
-                };
-                
-                await setDoc(docRef, dataToSave);
-                showMessage("Resume data saved successfully!", 'success');
+                // Save the entire state object to local storage
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+                window.showMessage("Resume data saved successfully to your browser!", 'success');
             } catch (e) {
-                console.error("Error saving document: ", e);
-                showMessage("Failed to save data. Check console for details.", 'error');
+                console.error("Error saving to local storage: ", e);
+                window.showMessage("Failed to save data locally.", 'error');
             }
         };
 
-        const loadResumeData = () => {
-            const docRef = getResumeDocRef();
-            if (!docRef) return; // Wait for auth if not ready
-
-            onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const loadedData = docSnap.data();
+        const loadDataLocally = () => {
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedData) {
+                    const loadedData = JSON.parse(storedData);
                     
-                    // Load Personal Information
-                    if (loadedData.personal) {
-                        Object.assign(state.personal, loadedData.personal);
-                        inputs.fullName.value = state.personal.fullName || '';
-                        inputs.email.value = state.personal.email || '';
-                        inputs.phone.value = state.personal.phone || '';
-                        inputs.linkedin.value = state.personal.linkedin || '';
-                        inputs.github.value = state.personal.github || '';
-                        inputs.location.value = state.personal.location || '';
-                        inputs.summary.value = state.personal.summary || '';
-                    }
+                    // Assign loaded data to state and input fields
+                    Object.assign(state, loadedData);
+                    
+                    // Load Personal Information into inputs
+                    inputs.fullName.value = state.personal.fullName || '';
+                    inputs.email.value = state.personal.email || '';
+                    inputs.phone.value = state.personal.phone || '';
+                    inputs.linkedin.value = state.personal.linkedin || '';
+                    inputs.github.value = state.personal.github || '';
+                    inputs.location.value = state.personal.location || '';
+                    inputs.summary.value = state.personal.summary || '';
 
-                    // Load List Items
-                    state.experience = loadedData.experience || [];
-                    state.education = loadedData.education || [];
-                    state.skills = loadedData.skills || [];
-                    state.achievements = loadedData.achievements || []; // Load new data
-                    state.courses = loadedData.courses || [];
-                    state.interests = loadedData.interests || [];
-                    state.languages = loadedData.languages || [];
-
-                    renderAll();
-                    console.log("Resume data loaded and rendered.");
+                    window.renderAll();
+                    console.log("Resume data loaded from local storage.");
                 } else {
-                    console.log("No resume data found for this user. Starting fresh.");
-                    renderAll(); // Render empty lists
+                    console.log("No local resume data found. Starting fresh.");
+                    window.renderAll(); 
                 }
-            }, (error) => {
-                console.error("Error listening to document: ", error);
-                showMessage("Failed to load real-time data.", 'error');
-            });
+            } catch (e) {
+                console.error("Error loading from local storage: ", e);
+                window.showMessage("Failed to load local data.", 'error');
+                window.renderAll(); 
+            }
         };
 
         // --- CRUD Functions ---
 
-        // Global function to remove items
+        // Expose globally for inline onclick
         window.removeItem = (arrayName, itemId) => {
             state[arrayName] = state[arrayName].filter(item => item.id !== itemId);
-            renderAll();
-            saveResumeData(state);
-            showMessage(`Item removed from ${arrayName}.`, 'info');
+            window.renderAll();
+            saveDataLocally(); // Save immediately after removal
+            window.showMessage(`Item removed from ${arrayName}.`, 'info');
         };
 
         // --- Event Handlers for Adding Items ---
@@ -763,21 +691,25 @@
             const description = inputs.expDescription.value.trim();
 
             if (!title || !company || !startDate || !description) {
-                showMessage('Please fill all required experience fields.', 'error');
+                window.showMessage('Please fill out Title, Company, Start Date, and Description.', 'error');
                 return;
             }
 
-            state.experience.push({
-                id: generateItemId(),
-                title, company, startDate, endDate, description
+            state.experience.push({ 
+                id: window.generateItemId(), 
+                title, company, startDate, endDate, description 
             });
 
             // Clear inputs
-            inputs.expTitle.value = inputs.expCompany.value = inputs.expStartDate.value = inputs.expEndDate.value = inputs.expDescription.value = '';
-            
-            renderExperience();
-            saveResumeData(state);
-            showMessage('Experience added!', 'success');
+            inputs.expTitle.value = '';
+            inputs.expCompany.value = '';
+            inputs.expStartDate.value = '';
+            inputs.expEndDate.value = '';
+            inputs.expDescription.value = '';
+
+            window.renderAll();
+            saveDataLocally();
+            window.showMessage('Experience added!', 'success');
         });
 
         // Education
@@ -788,149 +720,157 @@
             const endDate = inputs.eduEndDate.value.trim() || 'Present';
 
             if (!degree || !school || !startDate) {
-                showMessage('Please fill all required education fields.', 'error');
+                window.showMessage('Please fill out Degree, School, and Start Date.', 'error');
                 return;
             }
 
-            state.education.push({
-                id: generateItemId(),
-                degree, school, startDate, endDate
+            state.education.push({ 
+                id: window.generateItemId(), 
+                degree, school, startDate, endDate 
             });
 
             // Clear inputs
-            inputs.eduDegree.value = inputs.eduSchool.value = inputs.eduStartDate.value = inputs.eduEndDate.value = '';
-            
-            renderEducation();
-            saveResumeData(state);
-            showMessage('Education added!', 'success');
-        });
+            inputs.eduDegree.value = '';
+            inputs.eduSchool.value = '';
+            inputs.eduStartDate.value = '';
+            inputs.eduEndDate.value = '';
 
+            window.renderAll();
+            saveDataLocally();
+            window.showMessage('Education added!', 'success');
+        });
+        
         // Skills
         document.getElementById('add-skill-btn').addEventListener('click', () => {
             const category = inputs.skillCategory.value.trim();
-            const namesString = inputs.skillName.value.trim();
+            const name = inputs.skillName.value.trim();
 
-            if (!category || !namesString) {
-                showMessage('Please fill both skill fields.', 'error');
+            if (!category || !name) {
+                window.showMessage('Please fill out both Skill Category and Skill Name.', 'error');
                 return;
             }
 
-            const newSkills = namesString.split(',').map(name => ({
-                id: generateItemId(),
-                category: category,
-                name: name.trim()
-            })).filter(s => s.name); // Filter out empty names
+            // Split skill names by comma, clean them up, and add individually
+            const newSkills = name.split(',').map(skillName => ({
+                id: window.generateItemId(),
+                category,
+                name: skillName.trim()
+            })).filter(skill => skill.name); // Filter out empty strings from bad splits
 
             state.skills.push(...newSkills);
 
             // Clear inputs
-            inputs.skillCategory.value = inputs.skillName.value = '';
-            
-            renderSkills();
-            saveResumeData(state);
-            showMessage(`${newSkills.length} skill(s) added!`, 'success');
+            inputs.skillCategory.value = '';
+            inputs.skillName.value = '';
+
+            window.renderAll();
+            saveDataLocally();
+            window.showMessage(`Added ${newSkills.length} skill(s) to ${category}!`, 'success');
         });
 
-        // Achievements (New Handler)
+        // Achievements
         document.getElementById('add-achievement-btn').addEventListener('click', () => {
             const name = inputs.achievementName.value.trim();
             const description = inputs.achievementDescription.value.trim();
-
+            
             if (!name || !description) {
-                showMessage('Please fill out both the Achievement Name and Description fields.', 'error');
+                window.showMessage('Please fill out both Achievement Name and Description.', 'error');
                 return;
             }
 
             state.achievements.push({
-                id: generateItemId(),
+                id: window.generateItemId(),
                 name, description
             });
 
             // Clear inputs
-            inputs.achievementName.value = inputs.achievementDescription.value = '';
-            
-            renderAchievements();
-            saveResumeData(state);
-            showMessage('Key Achievement added!', 'success');
-        });
+            inputs.achievementName.value = '';
+            inputs.achievementDescription.value = '';
 
+            window.renderAll();
+            saveDataLocally();
+            window.showMessage('Key Achievement added!', 'success');
+        });
 
         // Courses
         document.getElementById('add-course-btn').addEventListener('click', () => {
             const name = inputs.courseName.value.trim();
             const institution = inputs.courseInstitution.value.trim();
-
+            
             if (!name || !institution) {
-                showMessage('Please fill all course fields.', 'error');
+                window.showMessage('Please fill out both Course Name and Institution.', 'error');
                 return;
             }
 
             state.courses.push({
-                id: generateItemId(),
+                id: window.generateItemId(),
                 name, institution
             });
 
             // Clear inputs
-            inputs.courseName.value = inputs.courseInstitution.value = '';
-            
-            renderCourses();
-            saveResumeData(state);
-            showMessage('Course added!', 'success');
-        });
+            inputs.courseName.value = '';
+            inputs.courseInstitution.value = '';
 
+            window.renderAll();
+            saveDataLocally();
+            window.showMessage('Course/Training added!', 'success');
+        });
+        
         // Interests
         document.getElementById('add-interest-btn').addEventListener('click', () => {
             const name = inputs.interestName.value.trim();
-
+            
             if (!name) {
-                showMessage('Please fill the interest field.', 'error');
+                window.showMessage('Please enter an Interest.', 'error');
                 return;
             }
 
-            state.interests.push({
-                id: generateItemId(),
-                name
-            });
+            // Split interest names by comma, clean them up, and add individually
+            const newInterests = name.split(',').map(interestName => ({
+                id: window.generateItemId(),
+                name: interestName.trim()
+            })).filter(interest => interest.name); 
+
+            state.interests.push(...newInterests);
 
             // Clear inputs
             inputs.interestName.value = '';
-            
-            renderInterests();
-            saveResumeData(state);
-            showMessage('Interest added!', 'success');
+
+            window.renderAll();
+            saveDataLocally();
+            window.showMessage(`Added ${newInterests.length} interest(s)!`, 'success');
         });
 
         // Languages
         document.getElementById('add-language-btn').addEventListener('click', () => {
             const name = inputs.langName.value.trim();
             const proficiency = parseInt(inputs.langProficiency.value, 10);
-
+            
             if (!name || isNaN(proficiency) || proficiency < 1 || proficiency > 5) {
-                showMessage('Please provide a language name and a proficiency level (1-5).', 'error');
+                window.showMessage('Please enter a Language Name and a Proficiency rating between 1 and 5.', 'error');
                 return;
             }
 
             state.languages.push({
-                id: generateItemId(),
+                id: window.generateItemId(),
                 name, proficiency
             });
 
             // Clear inputs
-            inputs.langName.value = inputs.langProficiency.value = '';
-            
-            renderLanguages();
-            saveResumeData(state);
-            showMessage('Language added!', 'success');
+            inputs.langName.value = '';
+            inputs.langProficiency.value = '';
+
+            window.renderAll();
+            saveDataLocally();
+            window.showMessage('Language added!', 'success');
         });
 
         // --- Main Form Submission Handler ---
-        form.addEventListener('submit', (event) => {
-            // CRITICAL FIX: Prevent the default form submission (page reload)
-            event.preventDefault(); 
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
             
-            // 1. Collect Personal Data
+            // 1. Gather Personal Info (Always collect from inputs)
             state.personal = {
-                id: userId || generateItemId(), // Use userId as the ID for personal block
                 fullName: inputs.fullName.value.trim(),
                 email: inputs.email.value.trim(),
                 phone: inputs.phone.value.trim(),
@@ -940,12 +880,29 @@
                 summary: inputs.summary.value.trim(),
             };
 
-            // 2. Save all collected data to Firestore
-            saveResumeData(state);
+            // 2. Save all data (Personal + Lists)
+            saveDataLocally();
         });
 
-        // Initial setup only runs after onAuthStateChanged is complete
-        // The loadResumeData() call inside onAuthStateChanged handles the initial rendering.
+        // --- Initial Load ---
+        loadDataLocally();
+
+        // Add event listeners to personal info fields to trigger save on change
+        Object.values(inputs).slice(0, 7).forEach(input => { // The first 7 inputs are personal info
+            input.addEventListener('change', () => {
+                // Update personal info in state immediately upon change
+                state.personal = {
+                    fullName: inputs.fullName.value.trim(),
+                    email: inputs.email.value.trim(),
+                    phone: inputs.phone.value.trim(),
+                    linkedin: inputs.linkedin.value.trim(),
+                    github: inputs.github.value.trim(),
+                    location: inputs.location.value.trim(),
+                    summary: inputs.summary.value.trim(),
+                };
+                saveDataLocally();
+            });
+        });
 
     </script>
 </body>
